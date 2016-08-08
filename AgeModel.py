@@ -155,7 +155,7 @@ class RadarLine:
         self.settick='auto'
 
         #definition of some global parameters
-        execfile('parameters-AllRadarLines.py')
+        execfile(self.label+'../parameters-AllRadarLines.py')
         filename=self.label+'parameters.py'
         if os.path.isfile(filename):
             execfile(filename)
@@ -222,7 +222,7 @@ class RadarLine:
 
 
         #Reading the AICC2012 dataset, calculation of steady age and interpolation
-        readarray=np.loadtxt('AICC2012.txt')
+        readarray=np.loadtxt(self.label+'../AICC2012.txt')
         self.AICC2012_depth=readarray[:,0]
         self.AICC2012_iedepth=readarray[:,1]
         self.AICC2012_accu=readarray[:,2]
