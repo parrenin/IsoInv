@@ -10,7 +10,7 @@ import os
 from matplotlib.collections import LineCollection
 from matplotlib.colors import LogNorm
 from scipy.interpolate import interp1d
-from scipy.optimize import leastsq, anneal
+from scipy.optimize import leastsq, anneal, basinhopping, minimize
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.special import erf
 
@@ -250,6 +250,7 @@ class RadarLine:
             f=interp1d(self.AICC2012_depth,self.AICC2012_sigma)
             self.iso_sigma=f(self.iso_EDC)
             self.iso_sigma=np.transpose([self.iso_sigma])
+
 
             output=np.hstack((self.iso_age, self.iso_sigma))
 #            with open(self.label+'-ages.txt','w') as f:
@@ -530,6 +531,14 @@ class RadarLine:
 #            resi=np.append(resi,(self.G0[j]-self.G0_prior)/self.G0_sigma)
 #        print 'Residual: ',resi
         return resi
+
+    def cost_fct(self, variables1D, j):
+
+        res=self.residuals1D(variables1D, j)
+#        cost=1.-m.exp( -np.sum(res**2)/2. )
+        cost=np.sum(res**2)
+        return cost
+
 
     def residuals(self, variables):
         self.a=variables[0:np.size(self.distance)]
@@ -1157,14 +1166,86 @@ elif RL.opt_method=='leastsq1D':
 #    print 'Optimization by leastsq-1D'
 #    RL.variables,RL.hess,infodict,mesg,ier=leastsq(RL.residuals, RL.variables, full_output=1)
 #    print mesg
-elif RL.opt_method='anneal':
-    print 'Optimization by anneal'    
+elif RL.opt_method=='L-BFGS-B':
+    print 'Optimization by L-BFGS-B'    
     for j in range(np.size(RL.distance)):
+        print 'index along the radar line: ', j
         if RL.invert_G0:
             RL.variables1D=np.array([ RL.a[j],RL.pprime[j],RL.G0[j] ])
+            lowerb=np.array([0.005, -1, 0.040])
+            upperb=np.array([0.1, 4, 0.080])
         else:
             RL.variables1D=np.array([ RL.a[j],RL.pprime[j] ])
-        RL.variables1D=anneal(RL.residuals1D, RL.variables1D, args=(j))
+            lowerb=np.array([0.001, -2.])
+            upperb=np.array([0.1, 5.])
+        print 'before opt',RL.variables1D
+        bounds=((0.005,0.1),(-1., 4.), (0.040, 0.080))
+#        minimizer_kwargs = {"args":(j,)}
+#        def mybounds(var):
+#            bol=np.all(var>lowerb)*np.all(var<upperb)
+#            return bol
+#        def mybounds(**kwargs):
+#            x = kwargs["x_new"]
+#            tmax = bool(np.all(x <= lowerb))
+#            tmin = bool(np.all(x >= upperb))
+#            print x
+#            print tmin and tmax
+#            return tmax and tmin
+        res=minimize(RL.cost_fct, RL.variables1D, args=(j,), bounds=bounds)
+        RL.variables1D=res.x
+        print 'success: ',res.success
+        print 'status: ', res.status
+        print 'message: ',res.message
+        print 'fun: ', res.fun
+#        print 'nit: ', res.nit
+        print 'after opt',RL.variables1D
+        RL.residuals1D(RL.variables1D,j)
+        RL.hess1D=np.zeros((np.size(RL.variables1D),np.size(RL.variables1D)))
+        RL.sigma1D(j)
+elif RL.opt_method=='basinhopping':
+    print 'Optimization by basinhopping'    
+    for j in range(np.size(RL.distance)):
+        print 'index along the radar line: ', j
+        if RL.invert_G0:
+            RL.variables1D=np.array([ RL.a[j],RL.pprime[j],RL.G0[j] ])
+            lowerb=np.array([0.005, -1, 0.040])
+            upperb=np.array([0.1, 4, 0.080])
+        else:
+            RL.variables1D=np.array([ RL.a[j],RL.pprime[j] ])
+            lowerb=np.array([0.001, -2.])
+            upperb=np.array([0.1, 5.])
+        print 'before opt',RL.variables1D
+        bounds=((0.005,0.1),(-1., 4.), (0.040, 0.080))
+        minimizer_kwargs = {"args":(j,)}
+#        def mybounds(var):
+#            bol=np.all(var>lowerb)*np.all(var<upperb)
+#            return bol
+#        def mybounds(**kwargs):
+#            x = kwargs["x_new"]
+#            tmax = bool(np.all(x >= lowerb))
+#            tmin = bool(np.all(x <= upperb))
+#            print x
+#            print tmin and tmax
+#            return tmax and tmin
+        class MyBounds(object):
+            def __init__(self, xmax=[0.1,4., 0.080], xmin=[0.005,-1, 0.040] ):
+                self.xmax = np.array(xmax)
+                self.xmin = np.array(xmin)
+            def __call__(self, **kwargs):
+                x = kwargs["x_new"]
+                tmax = bool(np.all(x <= self.xmax))
+                tmin = bool(np.all(x >= self.xmin))
+                print x, tmax and tmin
+                return tmax and tmin
+        mybounds=MyBounds()
+        res=basinhopping(RL.cost_fct, RL.variables1D, minimizer_kwargs=minimizer_kwargs, stepsize=accept_test=mybounds)
+        RL.variables1D=res.x
+        print 'success: ',res.success
+        print 'status: ', res.status
+        print 'message: ',res.message
+        print 'fun: ', res.fun
+#        print 'nit: ', res.nit
+        print 'after opt',RL.variables1D
         RL.residuals1D(RL.variables1D,j)
         RL.hess1D=np.zeros((np.size(RL.variables1D),np.size(RL.variables1D)))
         RL.sigma1D(j)
