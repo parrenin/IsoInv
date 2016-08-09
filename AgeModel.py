@@ -1157,7 +1157,17 @@ elif RL.opt_method=='leastsq1D':
 #    print 'Optimization by leastsq-1D'
 #    RL.variables,RL.hess,infodict,mesg,ier=leastsq(RL.residuals, RL.variables, full_output=1)
 #    print mesg
-
+elif RL.opt_method='anneal':
+    print 'Optimization by anneal'    
+    for j in range(np.size(RL.distance)):
+        if RL.invert_G0:
+            RL.variables1D=np.array([ RL.a[j],RL.pprime[j],RL.G0[j] ])
+        else:
+            RL.variables1D=np.array([ RL.a[j],RL.pprime[j] ])
+        RL.variables1D=anneal(RL.residuals1D, RL.variables1D, args=(j))
+        RL.residuals1D(RL.variables1D,j)
+        RL.hess1D=np.zeros((np.size(RL.variables1D),np.size(RL.variables1D)))
+        RL.sigma1D(j)
 else:
     print RL.opt_method,': Optimization method not recognized.'
     quit()
