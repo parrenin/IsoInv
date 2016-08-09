@@ -1,6 +1,7 @@
 from mpl_toolkits.basemap import Basemap
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.colors import LogNorm
+from matplotlib.colors import Normalize
 import numpy as np
 import matplotlib.pyplot as plt
 import gdal
@@ -20,8 +21,19 @@ list_RL=['icp7.jkb2n.edmc02a','icp7.jkb2n.f16t04a','icp7.jkb2n.ridge1a','mcm.jkb
 'oia.jkb2n.x48a','oia.jkb2n.x54a','oia.jkb2n.x57a','oia.jkb2n.x60a','oia.jkb2n.x63a','oia.jkb2n.x66a','oia.jkb2n.x69a','oia.jkb2n.x72a',\
 'oia.jkb2n.y15a','oia.jkb2n.y52a','oia.jkb2n.y60a','oia.jkb2n.y64a','oia.jkb2n.y68a','oia.jkb2n.y72a','oia.jkb2n.y74a','oia.jkb2n.y75a',\
 'oia.jkb2n.y76a','oia.jkb2n.y77a','oia.jkb2n.y78a','oia.jkb2n.y79a','oia.jkb2n.y81a','oia.jkb2n.y82a','oia.jkb2n.y84a','oia.jkb2n.y86a','oia.jkb2n.y88a','oia.jkb2n.y90a','vcd.jkb2g.dvd01a']
+
+#Setting RadarLines directory
+RLDir=sys.argv[1]
+if RLDir[-1]!='/':
+    RLDir=RLDir+'/'
+
+#Reading isochrones' ages
+readarray=np.loadtxt(RLDir+'ages.txt')
+iso_age=np.concatenate((np.array([0]),readarray[:,0]))
+
+#Reading data for each radar line
 for i,RLlabel in enumerate(list_RL):
-    directory='explore.layers.bycolumn.'+RLlabel+'.llxydzn'
+    directory=RLDir+'explore.layers.bycolumn.'+RLlabel+'.llxydzn'
     if run_model:
         sys.argv=['AgeModel.py',directory]
         execfile('AgeModel.py')
@@ -48,7 +60,7 @@ for i,RLlabel in enumerate(list_RL):
 
 list_maps=['bottom-age','sigma-bottom-age','min-bottom-age','melting', 'geothermal-heat-flux','pprime','steady-accu']
 for i in range(17):
-    list_maps.append('accu-layer'+str(i+1))
+    list_maps.append('accu-layer'+ "%02i"%(i+1) +'_'+str(int(iso_age[i]/1000.))+'-'+str(int(iso_age[i+1]/1000.))+'kyr' )
 
 
 for i,MapLabel in enumerate(list_maps):
@@ -82,7 +94,7 @@ for i,MapLabel in enumerate(list_maps):
 
 
     ##Draw surface contours
-    raster2 = gdal.Open('bedmap2/bedmap2_surface.txt')
+    raster2 = gdal.Open(RLDir+'bedmap2/bedmap2_surface.txt')
     band2 = raster2.GetRasterBand(1)
     array2 = band2.ReadAsArray()
     array2=np.where(array2==-9999,np.nan,array2)
@@ -105,8 +117,30 @@ for i,MapLabel in enumerate(list_maps):
 
 
     levels=np.concatenate(( np.arange(3150, 3260, 10),np.arange(3260,3270, 2) ))
-    cs=map1.contour(xx,yy, zz, colors='0.75', levels=levels, alpha=0.5)
+    cs=map1.contour(xx,yy, zz, colors='0.5', levels=levels, alpha=0.25)
     plt.clabel(cs, inline=1, fontsize=10,fmt='%1.0f')
+
+    ##Draw bedrock contours
+
+    raster2 = gdal.Open(RLDir+'bedmap2/bedmap2_bed.txt')
+    band2 = raster2.GetRasterBand(1)
+    array2 = band2.ReadAsArray()
+    array2=np.where(array2==-9999,np.nan,array2)
+    zz=array2[::-1,:]
+
+    x = np.linspace(0, map0.urcrnrx, array2.shape[1])
+    y = np.linspace(0, map0.urcrnry, array2.shape[0])
+    x1,y1=map0(lon1,lat1)
+    x2,y2=map0(lon2,lat2)
+    x=x-x1
+    y=y-y1
+    xx, yy = np.meshgrid(x, y)
+
+
+    levels=np.arange(-1000., 2000., 200.)
+    cs=map1.contour(xx,yy, zz, colors='m', levels=levels, alpha=0.25)
+    plt.clabel(cs, inline=1, fontsize=10,fmt='%1.0f')
+
 
     #Draw continent's contour
     #raster3 = gdal.Open('bedmap2/bedmap2_icemask_grounded_and_shelves.txt')
@@ -178,7 +212,7 @@ for i,MapLabel in enumerate(list_maps):
         G0=G0_array[:,3]
         x,y=map1(LON,LAT)
 
-        map1.scatter(x,y, c=G0*1e3, marker='o', lw=0., edgecolor='')
+        map1.scatter(x,y, c=G0*1e3, marker='o', lw=0., edgecolor='', s=dotsize)
         cb=map1.colorbar(pad='12%')
         cb.set_label('G0 (mW/m$^2$)')
 
@@ -189,22 +223,26 @@ for i,MapLabel in enumerate(list_maps):
         pprime=pprime_array[:,3]
         x,y=map1(LON,LAT)
 
-        map1.scatter(x,y, c=pprime, marker='o', lw=0., edgecolor='', s=dotsize)
+#        levels=np.arange(-1,3.1, 0.1)
+        norm = Normalize(vmin=-1.,vmax=3.)
+        map1.scatter(x,y, c=pprime, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
         cb=map1.colorbar(pad='12%')
         cb.set_label('pprime')
+#        cb.set_ticks(levels)
 
     elif i>=6:
 
         LON=accu_array[:,0]
         LAT=accu_array[:,1]
+        x,y=map1(LON,LAT)
         if i==6:
             accu=accu_array[:,3]
         else:
             accu=accu_array[:,i-2]
 
-        x,y=map1(LON,LAT)
 
-        map1.scatter(x,y, c=accu*100, marker='o', lw=0., edgecolor='', s=dotsize)
+        norm = Normalize(vmin=1.,vmax=4.)
+        map1.scatter(x,y, c=accu*100, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
         cb=map1.colorbar(pad='12%')
         cb.set_label('accu (cm/yr)')
 
@@ -213,7 +251,7 @@ for i,MapLabel in enumerate(list_maps):
     xEDC,yEDC=map1(lonEDC,latEDC)
     map1.scatter(xEDC,yEDC, marker='o', c='k', s=5.)
 
-    pp=PdfPages(MapLabel+'.pdf')
+    pp=PdfPages(RLDir+MapLabel+'.pdf')
     pp.savefig(plt.figure(MapLabel))
     pp.close()
     plt.close(fig)

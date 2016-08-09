@@ -10,7 +10,7 @@ import os
 from matplotlib.collections import LineCollection
 from matplotlib.colors import LogNorm
 from scipy.interpolate import interp1d
-from scipy.optimize import leastsq
+from scipy.optimize import leastsq, anneal
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.special import erf
 
@@ -260,7 +260,10 @@ class RadarLine:
                 np.savetxt(f,output, delimiter="\t")
 
 #Reading ages of isochrones and their sigmas
-        readarray=np.loadtxt(self.label+'ages.txt')
+        if os.path.isfile(self.label+'../ages.txt'):
+            readarray=np.loadtxt(self.label+'../ages.txt')
+        if os.path.isfile(self.label+'ages.txt'):
+            readarray=np.loadtxt(self.label+'ages.txt')
         self.iso_age=np.transpose([readarray[:,0]])
         self.iso_age=self.iso_age[0:self.nbiso]
         self.iso_sigma=np.transpose([readarray[:,1]])
@@ -991,9 +994,9 @@ class RadarLine:
     def parameters_save(self):
         output=np.vstack((self.LON, self.LAT, self.distance,self.a, self.sigma_a, self.accusteady_layer))
         header='#LON\tLAT\tdistance(km)\taccu(ice-m/yr)\tsigma_accu'
-        header=header+'\tlayer'+str(int((self.iso_age[0]+self.age_surf)/2000))+'kyr'
+        header=header+'\tlayer '+str(int(self.age_surf/1000.))+'-'+str(int(self.iso_age[0]/1000.))+'kyr'
         for i in range(self.nbiso-1):
-            header=header+'\tlayer'+str(int((self.iso_age[i+1]+self.iso_age[i])/2000))+'kyr'
+            header=header+'\tlayer '+str(int(self.iso_age[i]/1000.))+'-'+str(int(self.iso_age[i+1]/1000.))+'kyr'
         header=header+'\n'
         with open(self.label+'a.txt','w') as f:
             f.write(header)
@@ -1154,6 +1157,7 @@ elif RL.opt_method=='leastsq1D':
 #    print 'Optimization by leastsq-1D'
 #    RL.variables,RL.hess,infodict,mesg,ier=leastsq(RL.residuals, RL.variables, full_output=1)
 #    print mesg
+
 else:
     print RL.opt_method,': Optimization method not recognized.'
     quit()
