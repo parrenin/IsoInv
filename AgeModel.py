@@ -244,20 +244,31 @@ class RadarLine:
                 f=interp1d(self.distance_raw,self.iso_raw[i,:])
                 self.iso_EDC[i]=f(self.distance_EDC)
 
+            self.z_err=np.loadtxt(self.label+'z-err.txt')
+
             f=interp1d(self.AICC2012_depth,self.AICC2012_age)
             self.iso_age=f(self.iso_EDC)
             self.iso_age=np.transpose([self.iso_age])
-            f=interp1d(self.AICC2012_depth,self.AICC2012_sigma)
-            self.iso_sigma=f(self.iso_EDC)
+            self.iso_sigma1=(f(self.iso_EDC+self.z_err)-f(self.iso_EDC-self.z_err))/2.
+            g=interp1d(self.AICC2012_depth,self.AICC2012_sigma)
+            self.iso_sigma2=g(self.iso_EDC)
+            self.iso_sigma=np.sqrt(self.iso_sigma1**2+self.iso_sigma2**2)
             self.iso_sigma=np.transpose([self.iso_sigma])
 
+    #Code to be deleted
+            self.iso_accu_sigma=np.zeros((self.nbiso,1))
+            self.iso_accu_sigma[0]=self.iso_sigma[0]/(self.iso_age[0]-self.age_surf)
+            self.iso_accu_sigma[1:]=np.sqrt(self.iso_sigma[1:]**2+self.iso_sigma[:-1]**2)/(self.iso_age[1:]-self.iso_age[:-1])
 
-            output=np.hstack((self.iso_age, self.iso_sigma))
+
+            
+
+            output=np.hstack((self.iso_age, self.iso_sigma, self.iso_accu_sigma))
 #            with open(self.label+'-ages.txt','w') as f:
 #                f.write('#age (yr BP)\tsigma_age (yr BP)\n')
 #                np.savetxt(f,output, delimiter="\t") 
             with open(self.label+'ages.txt','w') as f:
-                f.write('#age (yr BP)\tsigma_age (yr BP)\n')
+                f.write('#age (yr BP)\tsigma_age (yr BP)\tsigma_accu\n')
                 np.savetxt(f,output, delimiter="\t")
 
 #Reading ages of isochrones and their sigmas
@@ -1238,7 +1249,7 @@ elif RL.opt_method=='basinhopping':
                 print x, tmax and tmin
                 return tmax and tmin
         mybounds=MyBounds()
-        res=basinhopping(RL.cost_fct, RL.variables1D, minimizer_kwargs=minimizer_kwargs, stepsize=accept_test=mybounds)
+        res=basinhopping(RL.cost_fct, RL.variables1D, minimizer_kwargs=minimizer_kwargs, accept_test=mybounds)
         RL.variables1D=res.x
         print 'success: ',res.success
         print 'status: ', res.status

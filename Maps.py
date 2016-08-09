@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import gdal
 import sys
 
-run_model=False
+run_model=True
 lat1=-75.5
 lon1=128.
 lat2=-74.8
