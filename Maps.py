@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import gdal
 import sys
 
-run_model=True
+run_model=False
 lat1=-75.5
 lon1=128.
 lat2=-74.8
@@ -58,7 +58,7 @@ for i,RLlabel in enumerate(list_RL):
 
 
 
-list_maps=['bottom-age','sigma-bottom-age','min-bottom-age','melting', 'geothermal-heat-flux','pprime','steady-accu']
+list_maps=['bottom-age','sigma-bottom-age','min-bottom-age','melting','melting-sigma', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','steady-accu']
 for i in range(17):
     list_maps.append('accu-layer'+ "%02i"%(i+1) +'_'+str(int(iso_age[i]/1000.))+'-'+str(int(iso_age[i+1]/1000.))+'kyr' )
 
@@ -205,6 +205,17 @@ for i,MapLabel in enumerate(list_maps):
         cb=map1.colorbar(pad='12%')
         cb.set_label('Melting (mm/yr)')
 
+    elif MapLabel=='melting-sigma':
+
+        LON=m_array[:,0]
+        LAT=m_array[:,1]
+        sigma_melting=m_array[:,4]
+        x,y=map1(LON,LAT)
+
+        map1.scatter(x,y, c=sigma_melting*1e3, marker='o', lw=0., edgecolor='', s=dotsize)
+        cb=map1.colorbar(pad='12%')
+        cb.set_label('$\sigma$ Melting (mm/yr)')
+
     elif MapLabel=='geothermal-heat-flux':
 
         LON=G0_array[:,0]
@@ -215,6 +226,17 @@ for i,MapLabel in enumerate(list_maps):
         map1.scatter(x,y, c=G0*1e3, marker='o', lw=0., edgecolor='', s=dotsize)
         cb=map1.colorbar(pad='12%')
         cb.set_label('G0 (mW/m$^2$)')
+
+    elif MapLabel=='geothermal-heat-flux-sigma':
+
+        LON=G0_array[:,0]
+        LAT=G0_array[:,1]
+        sigma_G0=G0_array[:,4]
+        x,y=map1(LON,LAT)
+
+        map1.scatter(x,y, c=sigma_G0*1e3, marker='o', lw=0., edgecolor='', s=dotsize)
+        cb=map1.colorbar(pad='12%')
+        cb.set_label('$\sigma_{G0}$ (mW/m$^2$)')
 
     elif MapLabel=='pprime':
 
@@ -230,15 +252,27 @@ for i,MapLabel in enumerate(list_maps):
         cb.set_label('pprime')
 #        cb.set_ticks(levels)
 
-    elif i>=6:
+    elif MapLabel=='pprime-sigma':
+
+        LON=pprime_array[:,0]
+        LAT=pprime_array[:,1]
+        sigma_pprime=pprime_array[:,4]
+        x,y=map1(LON,LAT)
+
+        norm = Normalize(vmin=0.,vmax=1.)
+        map1.scatter(x,y, c=sigma_pprime, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
+        cb=map1.colorbar(pad='12%')
+        cb.set_label('$\sigma$ pprime')
+
+    elif i>=9:
 
         LON=accu_array[:,0]
         LAT=accu_array[:,1]
         x,y=map1(LON,LAT)
-        if i==6:
+        if i==9:
             accu=accu_array[:,3]
         else:
-            accu=accu_array[:,i-2]
+            accu=accu_array[:,i-5]
 
 
         norm = Normalize(vmin=1.,vmax=4.)

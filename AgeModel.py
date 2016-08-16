@@ -586,7 +586,7 @@ class RadarLine:
 #       return jacob
 
     def jacobian1D(self, j):
-        epsilon=np.sqrt(np.diag(self.hess1D))/100000000.
+        epsilon=np.sqrt(np.diag(self.hess1D))/10000000000.
         model0=self.model1D(j)
         jacob=np.empty((np.size(self.variables1D), np.size(model0)))
         for i in np.arange(np.size(self.variables1D)):
@@ -791,6 +791,50 @@ class RadarLine:
         pp.savefig(plt.figure('Model'))
         pp.close()
 
+        fig=plt.figure('Age misfit')
+        plotmodel = fig.add_subplot(111, aspect=self.aspect)
+        plt.plot(self.distance, self.thk, color='k', linewidth=2)
+        for i in range(self.nbiso):
+            colorscatter=self.iso_modage[i,:]-self.iso_age[i]
+#            print i, np.shape(colorscatter),np.shape(self.iso[i,:]),colorscatter
+            if i==0:
+                sc=plt.scatter(self.distance, self.iso[i,:], c=colorscatter, label='obs. isochrones', s=7, edgecolor='')
+            else:
+                plt.scatter(self.distance, self.iso[i,:], c=colorscatter, s=7, edgecolor='')
+#        levels=np.arange(0, 1600000, 100000)
+#        levels_color=np.arange(0, 1500000, 10000)
+#        plt.contourf(self.dist, self.depth, self.age, levels_color)
+        if self.is_EDC:
+            EDC_x=np.array([self.distance_EDC, self.distance_EDC])
+            EDC_y=np.array([0., 3200.])
+            if self.EDC_line_dashed==True:
+                plt.plot(EDC_x, EDC_y, label='EDC ice core', color='r', linewidth=2, linestyle='--')
+            else:
+                plt.plot(EDC_x, EDC_y, label='EDC ice core', color='r', linewidth=2)
+        if self.is_NESW:
+            plt.xlabel('<NE - distance (km) - SW>')
+        else:
+            plt.xlabel('distance (km)')
+        plt.ylabel('depth (m)')
+        if self.is_legend:
+            leg=plt.legend(loc=1)
+            frame=leg.get_frame()
+            frame.set_facecolor('0.75')
+        cb=plt.colorbar(sc)
+#        cb.set_ticks(levels)
+#        cb.set_ticklabels(levels)
+        cb.set_label('Age misfit (yr)')
+        x1,x2,y1,y2 = plt.axis()
+        plt.axis((min(self.distance),max(self.distance),self.max_depth,0))
+        if self.reverse_distance:
+            plt.gca().invert_xaxis()
+        if self.settick=='manual':
+            plotmodel.set_xticks(np.arange(self.min_tick,self.max_tick+1.,self.delta_tick))
+        pp=PdfPages(self.label+'AgeMisfit.pdf')
+        pp.savefig(plt.figure('Age misfit'))
+        pp.close()
+
+
         fig = plt.figure('Model confidence interval')
         plotmodelci = fig.add_subplot(111, aspect=self.aspect)
         plt.plot(self.distance, self.thk, color='k', linewidth=2)
@@ -892,6 +936,8 @@ class RadarLine:
         pp.savefig(plt.figure('Temperature'))
         pp.close()
 #        plt.close(fig)
+
+
 
 #        fig = plt.figure('Accumulation history')
         lines=[zip(self.distance, self.accusteady_layer[i,:]) for i in range(self.nbiso)]
