@@ -8,7 +8,7 @@ import gdal
 import sys
 
 run_model=False
-output_format="svg"
+output_format="png"
 #write_data=True
 lat1=-75.5
 lon1=128.
@@ -61,7 +61,7 @@ for i,RLlabel in enumerate(list_RL):
 
 
 
-list_maps=['bottom-age','min-bottom-age','age-density-1Myr','age-density-1.2Myr','age-density-1.5Myr','melting','melting-sigma', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma','steady-accu']
+list_maps=['bottom-age','min-bottom-age','resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr','melting','melting-sigma', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma','steady-accu']
 list_length=len(list_maps)
 for i in range(17):
     list_maps.append('accu-layer'+ "%02i"%(i+1) +'_'+str(int(iso_age[i]/1000.))+'-'+str(int(iso_age[i+1]/1000.))+'kyr' )
@@ -207,7 +207,7 @@ for i,MapLabel in enumerate(list_maps):
 #            f.write('#LON\tLAT\tmin bottom age (yr)\n')
 #            np.savetxt(f,output, delimiter="\t")
 
-    if MapLabel=='age-density-1Myr':
+    if MapLabel=='resolution-1Myr':
 
         LON=botage_array[:,0]
         LAT=botage_array[:,1]
@@ -227,7 +227,7 @@ for i,MapLabel in enumerate(list_maps):
 #            f.write('#LON\tLAT\tresolution (kyr/m)\n')
 #            np.savetxt(f,output, delimiter="\t")
 
-    if MapLabel=='age-density-1.2Myr':
+    if MapLabel=='resolution-1.2Myr':
 
         LON=botage_array[:,0]
         LAT=botage_array[:,1]
@@ -246,7 +246,7 @@ for i,MapLabel in enumerate(list_maps):
 #            f.write('#LON\tLAT\tresolution (kyr/m)\n')
 #            np.savetxt(f,output, delimiter="\t")
 
-    if MapLabel=='age-density-1.5Myr':
+    if MapLabel=='resolution-1.5Myr':
 
         LON=botage_array[:,0]
         LAT=botage_array[:,1]
