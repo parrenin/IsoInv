@@ -8,6 +8,7 @@ import gdal
 import sys
 
 run_model=False
+output_format="svg"
 #write_data=True
 lat1=-75.5
 lon1=128.
@@ -363,10 +364,10 @@ for i,MapLabel in enumerate(list_maps):
         x,y=map1(LON,LAT)
         if i==list_length-1:
             accu=accu_array[:,3]
-            output=np.transpose(np.vstack((LON,LAT,accu*100)))
-            with open(RLDir+'a.txt','w') as f:
-                f.write('#LON\tLAT\taccu (cm/yr)\n')
-                np.savetxt(f,output, delimiter="\t")
+#            output=np.transpose(np.vstack((LON,LAT,accu*100)))
+#            with open(RLDir+'a.txt','w') as f:
+#                f.write('#LON\tLAT\taccu (cm/yr)\n')
+#                np.savetxt(f,output, delimiter="\t")
 
         else:
             accu=accu_array[:,i-list_length+5]
@@ -382,9 +383,10 @@ for i,MapLabel in enumerate(list_maps):
     xEDC,yEDC=map1(lonEDC,latEDC)
     map1.scatter(xEDC,yEDC, marker='o', c='k', s=5.)
 
-    pp=PdfPages(RLDir+MapLabel+'.pdf')
-    pp.savefig(plt.figure(MapLabel))
-    pp.close()
+#    pp=PdfPages(RLDir+MapLabel+'.pdf')
+#    pp.savefig(plt.figure(MapLabel))
+#    pp.close()
+    plt.savefig(RLDir+MapLabel+'.svg', format=output_format)
     plt.close(fig)
 
 plt.show()
