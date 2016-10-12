@@ -8,6 +8,7 @@ import gdal
 import sys
 
 run_model=False
+#write_data=True
 lat1=-75.5
 lon1=128.
 lat2=-74.8
@@ -58,7 +59,9 @@ for i,RLlabel in enumerate(list_RL):
 
 
 
-list_maps=['bottom-age','sigma-bottom-age','min-bottom-age','melting','melting-sigma', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','steady-accu']
+
+list_maps=['bottom-age','min-bottom-age','age-density-1Myr','age-density-1.2Myr','age-density-1.5Myr','melting','melting-sigma', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma','steady-accu']
+list_length=len(list_maps)
 for i in range(17):
     list_maps.append('accu-layer'+ "%02i"%(i+1) +'_'+str(int(iso_age[i]/1000.))+'-'+str(int(iso_age[i+1]/1000.))+'kyr' )
 
@@ -69,8 +72,16 @@ for i,MapLabel in enumerate(list_maps):
 
     fig=plt.figure(MapLabel)
     plt.title(MapLabel, y=1.05)
-    map0 = Basemap(projection='spstere', lat_ts=-71, boundinglat=-60, lon_0=180)
-    map1 = Basemap(projection='stere', lat_ts=-71, lat_0=-90, lon_0=180, llcrnrlat=lat1, llcrnrlon=lon1, urcrnrlat=lat2, urcrnrlon=lon2)
+#    map0 = Basemap(projection='spstere', lat_ts=-71, boundinglat=-59.996849, lon_0=180, rsphere=(6378137.00,6356752.3142))
+    map0 = Basemap(projection='stere', lat_ts=-71, lat_0=-90, lon_0=180, llcrnrlon=-135,llcrnrlat=-48.458667, urcrnrlon=45,urcrnrlat=-48.458667, rsphere=(6378137.00,6356752.3142))
+#    lon,lat=map0(-3333500, 0, inverse=True)
+#    print lat
+#    print map0(0,-60.)
+#    map0 = Basemap(projection='spstere', lat_ts=-71, boundinglat=lat, lon_0=180, rsphere=(6378137.00,6356752.3142))
+#    urcrnrlon,urcrnrlat=map0(6667000, 6667000, inverse=True)
+#    print llcrnrlon,llcrnrlat,urcrnrlon,urcrnrlat
+#    map0 = Basemap(projection='stere', lat_ts=-71, lat_0=-90, lon_0=180, llcrnrlat=llcrnrlat, llcrnrlon=llcrnrlon, urcrnrlat=urcrnrlat, urcrnrlon=urcrnrlon, rsphere=(6378137.00,6356752.3142))
+    map1 = Basemap(projection='stere', lat_ts=-71, lat_0=-90, lon_0=180, llcrnrlat=lat1, llcrnrlon=lon1, urcrnrlat=lat2, urcrnrlon=lon2, rsphere=(6378137.00,6356752.3142))
     #map1 = Basemap(projection='spstere', boundinglat=-60, lon_0=180, llcrnrx=-4.5e6, llcrnry=-2.3e6, urcrnrx=-5e6, urcrnry=-2.8e6)
     #m = Basemap(projection='stere', lat_0=-75, lon_0=123., width=1e6, height=1e6)
     #m.drawcoastlines()
@@ -102,6 +113,9 @@ for i,MapLabel in enumerate(list_maps):
 
     x = np.linspace(0, map0.urcrnrx, array2.shape[1])
     y = np.linspace(0, map0.urcrnry, array2.shape[0])
+#    print map0.urcrnrx,map0.urcrnry
+#    x = np.linspace(0, -6667000, array2.shape[1])
+#    y = np.linspace(0, -6667000, array2.shape[0])
     x1,y1=map0(lon1,lat1)
     x2,y2=map0(lon2,lat2)
     x=x-x1
@@ -159,40 +173,96 @@ for i,MapLabel in enumerate(list_maps):
         botage=botage_array[:,3]
         x,y=map1(LON,LAT)
 
-        map1.scatter(x,y, c=botage/1e6, marker='o', lw=0., edgecolor='', norm = LogNorm(), s=dotsize)
+        norm = LogNorm(vmin=0.7,vmax=5.)
+        map1.scatter(x,y, c=botage/1e6, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
         cb=map1.colorbar(pad='12%')
         cb.set_label('Bottom age (Myr)')
         levels=np.array([0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 2, 2.5, 3, 3.5, 4, 5])
         cb.set_ticks(levels)
         cb.set_ticklabels(levels)
 
-    if MapLabel=='sigma-bottom-age':
-
-        LON=botage_array[:,0]
-        LAT=botage_array[:,1]
-        sigmabotage=botage_array[:,4]
-        x,y=map1(LON,LAT)
-
-        map1.scatter(x,y, c=sigmabotage/1e6, marker='o', lw=0., edgecolor='', norm = LogNorm(), s=dotsize)
-        cb=map1.colorbar(pad='12%')
-        cb.set_label('Sigma bottom age (Myr)')
-#        levels=np.array([0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 2, 2.5, 3, 3.5, 4, 5])
-#        cb.set_ticks(levels)
-#        cb.set_ticklabels(levels)
+#        output=np.transpose(np.vstack((LON,LAT,botage)))
+#        with open(RLDir+'agebottom.txt','w') as f:
+#            f.write('#LON\tLAT\tbottom age (yr)\n')
+#            np.savetxt(f,output, delimiter="\t")
 
     if MapLabel=='min-bottom-age':
 
         LON=botage_array[:,0]
         LAT=botage_array[:,1]
-        minbotage=botage_array[:,5]
+        minbotage=botage_array[:,4]
         x,y=map1(LON,LAT)
 
-        map1.scatter(x,y, c=minbotage/1e6, marker='o', lw=0., edgecolor='', s=dotsize)
+        norm = LogNorm(vmin=0.7,vmax=5.)
+        map1.scatter(x,y, c=minbotage/1e6, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
         cb=map1.colorbar(pad='12%')
         cb.set_label('Minimum bottom age (Myr)')
-#        levels=np.array([0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 2, 2.5, 3, 3.5, 4, 5])
-#        cb.set_ticks(levels)
-#        cb.set_ticklabels(levels)
+        levels=np.array([0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 2, 2.5, 3, 3.5, 4, 5])
+        cb.set_ticks(levels)
+        cb.set_ticklabels(levels)
+
+#        output=np.transpose(np.vstack((LON,LAT,minbotage)))
+#        with open(RLDir+'minagebottom.txt','w') as f:
+#            f.write('#LON\tLAT\tmin bottom age (yr)\n')
+#            np.savetxt(f,output, delimiter="\t")
+
+    if MapLabel=='age-density-1Myr':
+
+        LON=botage_array[:,0]
+        LAT=botage_array[:,1]
+        resolution=botage_array[:,5]
+        x,y=map1(LON,LAT)
+
+        norm = LogNorm(vmin=1.,vmax=20.)
+        map1.scatter(x,y, c=resolution/1e3, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
+        cb=map1.colorbar(pad='12%')
+        cb.set_label('Resolution at 1Myr (kyr/m)')
+        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
+        cb.set_ticks(levels)
+        cb.set_ticklabels(levels)
+
+#        output=np.transpose(np.vstack((LON,LAT,resolution/1e3)))
+#        with open(RLDir+'resolution1Myr.txt','w') as f:
+#            f.write('#LON\tLAT\tresolution (kyr/m)\n')
+#            np.savetxt(f,output, delimiter="\t")
+
+    if MapLabel=='age-density-1.2Myr':
+
+        LON=botage_array[:,0]
+        LAT=botage_array[:,1]
+        resolution=botage_array[:,6]
+        x,y=map1(LON,LAT)
+
+        map1.scatter(x,y, c=resolution/1e3, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
+        cb=map1.colorbar(pad='12%')
+        cb.set_label('Resolution at 1.2Myr (kyr/m)')
+        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
+        cb.set_ticks(levels)
+        cb.set_ticklabels(levels)
+
+#        output=np.transpose(np.vstack((LON,LAT,resolution/1e3)))
+#        with open(RLDir+'resolution1.2Myr.txt','w') as f:
+#            f.write('#LON\tLAT\tresolution (kyr/m)\n')
+#            np.savetxt(f,output, delimiter="\t")
+
+    if MapLabel=='age-density-1.5Myr':
+
+        LON=botage_array[:,0]
+        LAT=botage_array[:,1]
+        resolution=botage_array[:,7]
+        x,y=map1(LON,LAT)
+
+        map1.scatter(x,y, c=resolution/1e3, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
+        cb=map1.colorbar(pad='12%')
+        cb.set_label('Resolution at 1.5Myr (kyr/m)')
+        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
+        cb.set_ticks(levels)
+        cb.set_ticklabels(levels)
+
+#        output=np.transpose(np.vstack((LON,LAT,resolution/1e3)))
+#        with open(RLDir+'resolution1.5Myr.txt','w') as f:
+#            f.write('#LON\tLAT\tresolution (kyr/m)\n')
+#            np.savetxt(f,output, delimiter="\t")
 
     elif MapLabel=='melting':
 
@@ -204,6 +274,11 @@ for i,MapLabel in enumerate(list_maps):
         map1.scatter(x,y, c=melting*1e3, marker='o', lw=0., edgecolor='', s=dotsize)
         cb=map1.colorbar(pad='12%')
         cb.set_label('Melting (mm/yr)')
+
+#        output=np.transpose(np.vstack((LON,LAT,melting*1e3)))
+#        with open(RLDir+'m.txt','w') as f:
+#            f.write('#LON\tLAT\tmelting (mm/yr)\n')
+#            np.savetxt(f,output, delimiter="\t")
 
     elif MapLabel=='melting-sigma':
 
@@ -252,6 +327,12 @@ for i,MapLabel in enumerate(list_maps):
         cb.set_label('pprime')
 #        cb.set_ticks(levels)
 
+#        output=np.transpose(np.vstack((LON,LAT,pprime)))
+#        with open(RLDir+'p.txt','w') as f:
+#            f.write('#LON\tLAT\tpprime\n')
+#            np.savetxt(f,output, delimiter="\t")
+
+
     elif MapLabel=='pprime-sigma':
 
         LON=pprime_array[:,0]
@@ -264,15 +345,31 @@ for i,MapLabel in enumerate(list_maps):
         cb=map1.colorbar(pad='12%')
         cb.set_label('$\sigma$ pprime')
 
-    elif i>=9:
+    elif MapLabel=='accu-sigma':
 
         LON=accu_array[:,0]
         LAT=accu_array[:,1]
         x,y=map1(LON,LAT)
-        if i==9:
+        accu=accu_array[:,4]
+        norm = Normalize(vmin=0.,vmax=0.1)
+        map1.scatter(x,y, c=accu*100, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
+        cb=map1.colorbar(pad='12%')
+        cb.set_label('sigma accu (cm/yr)')
+
+    elif i>=list_length-1:
+
+        LON=accu_array[:,0]
+        LAT=accu_array[:,1]
+        x,y=map1(LON,LAT)
+        if i==list_length-1:
             accu=accu_array[:,3]
+            output=np.transpose(np.vstack((LON,LAT,accu*100)))
+            with open(RLDir+'a.txt','w') as f:
+                f.write('#LON\tLAT\taccu (cm/yr)\n')
+                np.savetxt(f,output, delimiter="\t")
+
         else:
-            accu=accu_array[:,i-5]
+            accu=accu_array[:,i-list_length+5]
 
 
         norm = Normalize(vmin=1.,vmax=4.)

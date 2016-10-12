@@ -2,13 +2,15 @@ from mpl_toolkits.basemap import Basemap
 import numpy as np
 import matplotlib.pyplot as plt
 import gdal
+import sys
 
 RLDir=sys.argv[1]
 if RLDir[-1]!='/':
     RLDir=RLDir+'/'
 
 
-m = Basemap(projection='spstere', boundinglat=-60, lon_0=180)
+m = Basemap(projection='stere', lat_ts=-71, lat_0=-90, lon_0=180, llcrnrlon=-135,llcrnrlat=-48.458667, urcrnrlon=45,urcrnrlat=-48.458667, rsphere=(6378137.00,6356752.3142))
+#m = Basemap(projection='spstere', boundinglat=-60, lon_0=180)
 #m.drawcoastlines()
 #m.fillcontinents(color='white',lake_color='aqua')
 #m.drawmapboundary(fill_color='aqua')

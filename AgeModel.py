@@ -7,6 +7,7 @@ import math as m
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import random
 from matplotlib.collections import LineCollection
 from matplotlib.colors import LogNorm
 from scipy.interpolate import interp1d
@@ -332,6 +333,15 @@ class RadarLine:
         self.sigma_logage=np.zeros_like(self.age)
         self.is_fusion=np.empty_like(self.distance)
 
+        self.agebot=np.empty_like(self.distance)
+        self.sigmaagebot=np.empty_like(self.distance)
+        self.agebotmin=np.empty_like(self.distance)
+        self.age_density1Myr=np.nan*np.ones_like(self.distance)
+        self.age_density1dot2Myr=np.nan*np.ones_like(self.distance)
+        self.age_density1dot5Myr=np.nan*np.ones_like(self.distance)
+
+
+
 # Model function
 
     def model1D(self, j):
@@ -412,9 +422,25 @@ class RadarLine:
         f=interp1d(np.concatenate((np.array([-1000000000]),self.AICC2012_steadyage,np.array([1000000*self.AICC2012_steadyage[-1]]))),np.concatenate((np.array([self.AICC2012_age[0]]),self.AICC2012_age,np.array([1000000*self.AICC2012_age[-1]]))))
         self.age[:,j]=f(self.agesteady[:,j])
 
+        f=interp1d(self.depth[:,j],self.age[:,j])
+        self.agebot[j]=f(max(self.depth[:,j])-60)
+        h1=interp1d(self.age[:-1,j],self.age_density[:,j])
+        if self.agebot[j]>=1000000:
+            self.age_density1Myr[j]=h1(1000000)
+        else:
+            self.age_density1Myr[j]=np.nan
+        if self.agebot[j]>=1200000:
+            self.age_density1dot2Myr[j]=h1(1200000)
+        else:
+            self.age_density1dot2Myr[j]=np.nan
+        if self.agebot[j]>=1500000:
+            self.age_density1dot5Myr[j]=h1(1500000)
+        else:
+            self.age_density1dot5Myr[j]=np.nan
+
         return np.concatenate(( np.array([self.a[j]]),np.array([self.m[j]]),np.array([self.pprime[j]]),self.age[:,j],np.log(self.age[1:,j]),np.array([self.G0[j]]) ))
 
-    def model(self):
+    def model(self):  #TODO: kill this or make a call to model(j)
         self.p=-1+np.exp(self.pprime)
         #Steady plug flow without melting thermal model (cf. document from Catherine)
         self.Tf=Tf(rhog*ggrav*self.thkie)     #FIXME: take into account temporal variations of ice thickness
@@ -547,7 +573,7 @@ class RadarLine:
 
         res=self.residuals1D(variables1D, j)
 #        cost=1.-m.exp( -np.sum(res**2)/2. )
-        cost=np.sum(res**2)
+        cost=np.sum(res**2)/2.
         return cost
 
 
@@ -1081,9 +1107,9 @@ class RadarLine:
             np.savetxt(f,np.transpose(output), delimiter="\t") 
 
     def bot_age_save(self):
-        output=np.vstack((self.LON, self.LAT, self.distance,self.agebot,self.sigmaagebot,np.exp(np.log(self.agebot)-2*self.sigmalogagebot) ))
+        output=np.vstack((self.LON, self.LAT, self.distance,self.agebot,self.agebotmin,self.age_density1Myr,self.age_density1dot2Myr,self.age_density1dot5Myr ))
         with open(self.label+'agebottom.txt','w') as f:
-            f.write('#LON\tLAT\tdistance(km)\tage(yr-b1950)\tsigma(yr)\tage-min(yr-b1950)\n')
+            f.write('#LON\tLAT\tdistance(km)\tage(yr-b1950)\tage-min(yr-b1950)\tage_density1Myr\tage_density1.2Myr\tage_density1.5Myr\n')
             np.savetxt(f,np.transpose(output), delimiter="\t") 
 
     def EDC(self):
@@ -1130,16 +1156,6 @@ class RadarLine:
         pp.close()
 
     def max_age(self):
-        self.agebot=np.empty_like(self.distance)
-        self.sigmaagebot=np.empty_like(self.distance)
-        self.sigmalogagebot=np.empty_like(self.distance)
-        for j in range(np.size(self.distance)):
-            f=interp1d(self.depth[:,j],self.age[:,j])
-            self.agebot[j]=f(max(self.depth[:,j])-60)
-            g=interp1d(self.depth[:,j],self.sigma_age[:,j])
-            self.sigmaagebot[j]=g(max(self.depth[:,j])-60)
-            h=interp1d(self.depth[1:,j],self.sigma_logage[1:,j])
-            self.sigmalogagebot[j]=h(max(self.depth[:,j])-60)
         j=np.argmax(self.agebot)
         self.agemax=max(self.agebot)
         self.sigmaagemax=self.sigmaagebot[j]
@@ -1198,7 +1214,6 @@ elif RL.opt_method=='none1D':
 elif RL.opt_method=='leastsq1D':
     print 'Optimization by leastsq1D'    
     for j in range(np.size(RL.distance)):
-#    for j in range(1):
         print 'index along the radar line: ', j
         if RL.invert_G0:
             RL.variables1D=np.array([ RL.a[j],RL.pprime[j],RL.G0[j] ])
@@ -1208,104 +1223,42 @@ elif RL.opt_method=='leastsq1D':
         RL.residuals1D(RL.variables1D,j)
         if RL.calc_sigma==False:
           RL.hess1D=np.zeros((np.size(RL.variables1D),np.size(RL.variables1D)))
-#        print RL.hess1D
         RL.sigma1D(j)
-#    RL.distance=RL.distance[np.where(RL.distance==RL.distance[0])]
-#    RL.a=RL.a[np.where(RL.distance==RL.distance[0])]
-#    RL.pprime=RL.pprime[np.where(RL.distance==RL.distance[0])]
-#    RL.G0=RL.G0[np.where(RL.distance==RL.distance[0])]
-#    RL.depthie=RL.depthie[:,np.where(RL.distance==RL.distance[0])]
-#    if RL.invert_G0:
-#        RL.variables=np.concatenate((RL.a,RL.pprime,RL.G0))
-#    else:
-#        RL.variables=np.concatenate((RL.a,RL.pprime))
-##        self.variables=np.concatenate((self.a,self.m,self.s))
-#    print 'Optimization by leastsq-1D'
-#    RL.variables,RL.hess,infodict,mesg,ier=leastsq(RL.residuals, RL.variables, full_output=1)
-#    print mesg
-elif RL.opt_method=='L-BFGS-B':
-    print 'Optimization by L-BFGS-B'    
+    RL.agebotmin=RL.agebot-RL.sigmabotage
+elif RL.opt_method=='MH1D':
+    print 'Optimization by MH1D'    
     for j in range(np.size(RL.distance)):
         print 'index along the radar line: ', j
         if RL.invert_G0:
             RL.variables1D=np.array([ RL.a[j],RL.pprime[j],RL.G0[j] ])
-            lowerb=np.array([0.005, -1, 0.040])
-            upperb=np.array([0.1, 4, 0.080])
         else:
             RL.variables1D=np.array([ RL.a[j],RL.pprime[j] ])
-            lowerb=np.array([0.001, -2.])
-            upperb=np.array([0.1, 5.])
-        print 'before opt',RL.variables1D
-        bounds=((0.005,0.1),(-1., 4.), (0.040, 0.080))
-#        minimizer_kwargs = {"args":(j,)}
-#        def mybounds(var):
-#            bol=np.all(var>lowerb)*np.all(var<upperb)
-#            return bol
-#        def mybounds(**kwargs):
-#            x = kwargs["x_new"]
-#            tmax = bool(np.all(x <= lowerb))
-#            tmin = bool(np.all(x >= upperb))
-#            print x
-#            print tmin and tmax
-#            return tmax and tmin
-        res=minimize(RL.cost_fct, RL.variables1D, args=(j,), bounds=bounds)
-        RL.variables1D=res.x
-        print 'success: ',res.success
-        print 'status: ', res.status
-        print 'message: ',res.message
-        print 'fun: ', res.fun
-#        print 'nit: ', res.nit
-        print 'after opt',RL.variables1D
+        RL.variables1D,RL.hess1D,infodict,mesg,ier=leastsq(RL.residuals1D, RL.variables1D, args=(j), full_output=1)
+        cost=RL.cost_fct(RL.variables1D,j)
+        variables1D_accepted=np.array([RL.variables1D])
+        agebot_accepted=np.array([RL.agebot[j]])
+        agebot=RL.agebot[j]
+        accu_accepted=np.array([RL.a[j]])
+        accu=RL.a[j]
+        for iter in range(RL.MHnbiter):
+#            print 'iteration no:',i
+            RL.variables1Dtest=np.random.normal(RL.variables1D,np.sqrt(np.diag(RL.hess1D)))
+            costtest=RL.cost_fct(RL.variables1Dtest,j)
+            if random.uniform(0,1)<m.exp(-costtest+cost):
+                cost=costtest
+                RL.variables1D=RL.variables1Dtest
+                agebot=RL.agebot[j]
+                accu=RL.a[j]
+            agebot_accepted=np.append(agebot_accepted,agebot)
+            accu_accepted=np.append(accu_accepted,accu)
+#            print RL.variables1D
+        RL.agebotmin[j]=np.percentile(agebot_accepted,15)
+        RL.sigma_a[j]=np.std(accu_accepted)
+        print 'min age at 85%',RL.agebotmin[j]
+        RL.variables1D,RL.hess1D,infodict,mesg,ier=leastsq(RL.residuals1D, RL.variables1D, args=(j), full_output=1)
         RL.residuals1D(RL.variables1D,j)
-        RL.hess1D=np.zeros((np.size(RL.variables1D),np.size(RL.variables1D)))
-        RL.sigma1D(j)
-elif RL.opt_method=='basinhopping':
-    print 'Optimization by basinhopping'    
-    for j in range(np.size(RL.distance)):
-        print 'index along the radar line: ', j
-        if RL.invert_G0:
-            RL.variables1D=np.array([ RL.a[j],RL.pprime[j],RL.G0[j] ])
-            lowerb=np.array([0.005, -1, 0.040])
-            upperb=np.array([0.1, 4, 0.080])
-        else:
-            RL.variables1D=np.array([ RL.a[j],RL.pprime[j] ])
-            lowerb=np.array([0.001, -2.])
-            upperb=np.array([0.1, 5.])
-        print 'before opt',RL.variables1D
-        bounds=((0.005,0.1),(-1., 4.), (0.040, 0.080))
-        minimizer_kwargs = {"args":(j,)}
-#        def mybounds(var):
-#            bol=np.all(var>lowerb)*np.all(var<upperb)
-#            return bol
-#        def mybounds(**kwargs):
-#            x = kwargs["x_new"]
-#            tmax = bool(np.all(x >= lowerb))
-#            tmin = bool(np.all(x <= upperb))
-#            print x
-#            print tmin and tmax
-#            return tmax and tmin
-        class MyBounds(object):
-            def __init__(self, xmax=[0.1,4., 0.080], xmin=[0.005,-1, 0.040] ):
-                self.xmax = np.array(xmax)
-                self.xmin = np.array(xmin)
-            def __call__(self, **kwargs):
-                x = kwargs["x_new"]
-                tmax = bool(np.all(x <= self.xmax))
-                tmin = bool(np.all(x >= self.xmin))
-                print x, tmax and tmin
-                return tmax and tmin
-        mybounds=MyBounds()
-        res=basinhopping(RL.cost_fct, RL.variables1D, minimizer_kwargs=minimizer_kwargs, accept_test=mybounds)
-        RL.variables1D=res.x
-        print 'success: ',res.success
-        print 'status: ', res.status
-        print 'message: ',res.message
-        print 'fun: ', res.fun
-#        print 'nit: ', res.nit
-        print 'after opt',RL.variables1D
-        RL.residuals1D(RL.variables1D,j)
-        RL.hess1D=np.zeros((np.size(RL.variables1D),np.size(RL.variables1D)))
-        RL.sigma1D(j)
+
+
 else:
     print RL.opt_method,': Optimization method not recognized.'
     quit()
