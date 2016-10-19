@@ -164,6 +164,7 @@ class RadarLine:
 
         #Reading the radar dataset
         nbcolumns=6+self.nbiso+self.is_bedelev
+        print 'self.is_bedelev',0+self.is_bedelev
         print 'nbcolumns:',nbcolumns
         readarray=np.loadtxt(self.label+'radar-data.txt', usecols=range(nbcolumns))
         self.LON_raw=readarray[:,0]
@@ -197,6 +198,7 @@ class RadarLine:
 #        if self.reset_distance:
 #            self.distance_raw=self.distance_raw-self.distance_start
 
+
         if self.distance_start=='auto':
             self.distance_start=int(np.min(self.distance_raw)+2.99)
         if self.distance_end=='auto':
@@ -212,9 +214,15 @@ class RadarLine:
         self.iso=np.zeros((self.nbiso,np.size(self.distance)))
         self.iso_modage=np.empty_like(self.iso)
         self.iso_EDC=np.zeros(self.nbiso)
+
+#        print 'test'
+
         for i in range(self.nbiso):
             f=interp1d_lin_aver(self.distance_raw,self.iso_raw[i,:])
             self.iso[i,:]=f(np.concatenate((self.distance-self.resolution/2, np.array([self.distance[-1]+self.resolution/2]))))
+
+#        print 'test2'
+
         f=interp1d(self.distance_raw,self.LON_raw)
         self.LON=f(self.distance)
         f=interp1d(self.distance_raw, self.LAT_raw)
@@ -334,7 +342,15 @@ class RadarLine:
         self.is_fusion=np.empty_like(self.distance)
 
         self.agebot=np.empty_like(self.distance)
-        self.sigmaagebot=np.empty_like(self.distance)
+        self.age100m=np.empty_like(self.distance)
+        self.age150m=np.empty_like(self.distance)
+        self.age200m=np.empty_like(self.distance)
+        self.age250m=np.empty_like(self.distance)
+        self.height0dot8Myr=np.nan*np.ones_like(self.distance)
+        self.height1Myr=np.nan*np.ones_like(self.distance)
+        self.height1dot2Myr=np.nan*np.ones_like(self.distance)
+        self.height1dot5Myr=np.nan*np.ones_like(self.distance)
+        self.sigmabotage=np.empty_like(self.distance)
         self.agebotmin=np.empty_like(self.distance)
         self.age_density1Myr=np.nan*np.ones_like(self.distance)
         self.age_density1dot2Myr=np.nan*np.ones_like(self.distance)
@@ -424,7 +440,12 @@ class RadarLine:
 
         f=interp1d(self.depth[:,j],self.age[:,j])
         self.agebot[j]=f(max(self.depth[:,j])-60)
+        self.age100m[j]=f(max(self.depth[:,j])-100)
+        self.age150m[j]=f(max(self.depth[:,j])-150)
+        self.age200m[j]=f(max(self.depth[:,j])-200)
+        self.age250m[j]=f(max(self.depth[:,j])-250)
         h1=interp1d(self.age[:-1,j],self.age_density[:,j])
+        h2=interp1d(self.age[:,j],self.depth[:,j])
         if self.agebot[j]>=1000000:
             self.age_density1Myr[j]=h1(1000000)
         else:
@@ -437,6 +458,22 @@ class RadarLine:
             self.age_density1dot5Myr[j]=h1(1500000)
         else:
             self.age_density1dot5Myr[j]=np.nan
+        if max(self.age[:,j])>=800000:
+            self.height0dot8Myr[j]=self.thk[j]-h2(800000)
+        else:
+            self.height0dot8Myr[j]=np.nan
+        if max(self.age[:,j])>=1000000:
+            self.height1Myr[j]=self.thk[j]-h2(1000000)
+        else:
+            self.height1Myr[j]=np.nan
+        if max(self.age[:,j])>=1200000:
+            self.height1dot2Myr[j]=self.thk[j]-h2(1200000)
+        else:
+            self.height1dot2Myr[j]=np.nan
+        if max(self.age[:,j])>=1500000:
+            self.height1dot5Myr[j]=self.thk[j]-h2(1500000)
+        else:
+            self.height1dot5Myr[j]=np.nan
 
         return np.concatenate(( np.array([self.a[j]]),np.array([self.m[j]]),np.array([self.pprime[j]]),self.age[:,j],np.log(self.age[1:,j]),np.array([self.G0[j]]) ))
 
@@ -680,6 +717,8 @@ class RadarLine:
         c_model=np.dot(np.transpose(jacob[:,index:index+1]),np.dot(self.hess1D,jacob[:,index:index+1]))
         self.sigma_G0[j]=np.sqrt(np.diag(c_model))[0]
 
+        f=interp1d(self.depth[:,j],self.sigma_age[:,j])
+        self.sigmabotage[j]=f(self.thk[j]-60.)
 
         return
 
@@ -1107,9 +1146,9 @@ class RadarLine:
             np.savetxt(f,np.transpose(output), delimiter="\t") 
 
     def bot_age_save(self):
-        output=np.vstack((self.LON, self.LAT, self.distance,self.agebot,self.agebotmin,self.age_density1Myr,self.age_density1dot2Myr,self.age_density1dot5Myr ))
+        output=np.vstack((self.LON,self.LAT,self.distance,self.agebot,self.agebotmin,self.age100m,self.age150m,self.age200m,self.age250m,self.age_density1Myr,self.age_density1dot2Myr,self.age_density1dot5Myr,self.height0dot8Myr,self.height1Myr,self.height1dot2Myr,self.height1dot5Myr))
         with open(self.label+'agebottom.txt','w') as f:
-            f.write('#LON\tLAT\tdistance(km)\tage(yr-b1950)\tage-min(yr-b1950)\tage_density1Myr\tage_density1.2Myr\tage_density1.5Myr\n')
+            f.write('#LON\tLAT\tdistance(km)\tage60m(yr-b1950)\tage-min(yr-b1950)\tage100m\tage150m\tage200m\tage250\tage_density1Myr\tage_density1.2Myr\tage_density1.5Myr\theight0.8Myr\theight1Myr\theight1.2Myr\theight1.5Myr\n')
             np.savetxt(f,np.transpose(output), delimiter="\t") 
 
     def EDC(self):
@@ -1155,17 +1194,17 @@ class RadarLine:
         pp.savefig(plt.figure('Temperature at EDC'))
         pp.close()
 
-    def max_age(self):
-        j=np.argmax(self.agebot)
-        self.agemax=max(self.agebot)
-        self.sigmaagemax=self.sigmaagebot[j]
-        self.distanceagemax=self.distance[j]
-        f=interp1d(self.distance_raw,self.LON_raw)
-        g=interp1d(self.distance_raw,self.LAT_raw)
-        self.LONagemax=f(self.distanceagemax)
-        self.LATagemax=g(self.distanceagemax)
-        print 'Maximum age is ',self.agemax,'+-',self.sigmaagemax
-        print 'It occurs at a distance of ',self.distanceagemax,' km, with coordinates ',self.LONagemax,', ',self.LATagemax        
+#    def max_age(self):
+#        j=np.argmax(self.age100)
+#        self.agemax=max(self.agebot)
+#        self.sigmaagemax=self.sigmaagebot[j]
+#        self.distanceagemax=self.distance[j]
+#        f=interp1d(self.distance_raw,self.LON_raw)
+#        g=interp1d(self.distance_raw,self.LAT_raw)
+#        self.LONagemax=f(self.distanceagemax)
+#        self.LATagemax=g(self.distanceagemax)
+#        print 'Maximum age is ',self.agemax,'+-',self.sigmaagemax
+#        print 'It occurs at a distance of ',self.distanceagemax,' km, with coordinates ',self.LONagemax,', ',self.LATagemax        
 
 
 
@@ -1239,7 +1278,9 @@ elif RL.opt_method=='MH1D':
         agebot_accepted=np.array([RL.agebot[j]])
         agebot=RL.agebot[j]
         accu_accepted=np.array([RL.a[j]])
+        G0_accepted=np.array([RL.G0[j]])
         accu=RL.a[j]
+        G0=RL.G0[j]
         for iter in range(RL.MHnbiter):
 #            print 'iteration no:',i
             RL.variables1Dtest=np.random.normal(RL.variables1D,np.sqrt(np.diag(RL.hess1D)))
@@ -1249,11 +1290,14 @@ elif RL.opt_method=='MH1D':
                 RL.variables1D=RL.variables1Dtest
                 agebot=RL.agebot[j]
                 accu=RL.a[j]
+                G0=RL.G0[j]
             agebot_accepted=np.append(agebot_accepted,agebot)
             accu_accepted=np.append(accu_accepted,accu)
+            G0_accepted=np.append(G0_accepted,G0)
 #            print RL.variables1D
         RL.agebotmin[j]=np.percentile(agebot_accepted,15)
         RL.sigma_a[j]=np.std(accu_accepted)
+        RL.sigma_G0[j]=np.std(G0_accepted)
         print 'min age at 85%',RL.agebotmin[j]
         RL.variables1D,RL.hess1D,infodict,mesg,ier=leastsq(RL.residuals1D, RL.variables1D, args=(j), full_output=1)
         RL.residuals1D(RL.variables1D,j)
@@ -1278,6 +1322,6 @@ RL.parameters_display()
 RL.parameters_save()
 if RL.is_EDC:
     RL.EDC()
-RL.max_age()
+#RL.max_age()
 RL.bot_age_save()
 print 'Program execution time: ', time.time() - start_time, 'seconds' 

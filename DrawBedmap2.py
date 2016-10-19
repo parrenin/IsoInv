@@ -1,4 +1,5 @@
-from mpl_toolkits.basemap import Basemap
+from mpl_toolkits.basemap import Basemap,cm
+from matplotlib.colors import Normalize
 import numpy as np
 import matplotlib.pyplot as plt
 import gdal
@@ -8,7 +9,7 @@ RLDir=sys.argv[1]
 if RLDir[-1]!='/':
     RLDir=RLDir+'/'
 
-
+#m = Basemap(projection='stere', lat_ts=-71, lat_0=-90, lon_0=0.,llcrnrlon=-135,llcrnrlat=-48.458667, urcrnrlon=45,urcrnrlat=-48.458667, rsphere=(6378137.00,6356752.3142))
 m = Basemap(projection='stere', lat_ts=-71, lat_0=-90, lon_0=180, llcrnrlon=-135,llcrnrlat=-48.458667, urcrnrlon=45,urcrnrlat=-48.458667, rsphere=(6378137.00,6356752.3142))
 #m = Basemap(projection='spstere', boundinglat=-60, lon_0=180)
 #m.drawcoastlines()
@@ -23,8 +24,14 @@ raster = gdal.Open(RLDir+'bedmap2/bedmap2_bed.txt')
 band = raster.GetRasterBand(1)
 array = band.ReadAsArray()
 array=np.where(array==-9999,np.nan,array)
+array=array[::-1,:]
 
-m.imshow(array[::-1,:])
+norm = Normalize(vmin=-3000.,vmax=3000.)
+#from matplotlib.colors import LightSource
+#ls = LightSource(azdeg = 90, altdeg = 20)
+#rgb = ls.shade(array, plt.cm.Greys)
+#im = m.imshow(rgb, cmap='terrain', norm=norm)
+m.imshow(array, cmap='terrain', norm=norm)
 m.colorbar()
 
 
@@ -55,4 +62,4 @@ m.contour(xx,yy, array3[::-1,:], colors='k')
 m.scatter(-75., 123.)
 
 
-plt.show()
+plt.savefig(RLDir+'Bedmap2.pdf', format='pdf', bbox_inches='tight')
