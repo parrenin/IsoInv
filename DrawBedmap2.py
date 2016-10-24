@@ -1,9 +1,17 @@
 from mpl_toolkits.basemap import Basemap,cm
 from matplotlib.colors import Normalize
+from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 import gdal
 import sys
+
+lat1=-75.5
+lon1=128.
+lat2=-74.8
+lon2=118.1
+lonEDC=123.+21./60.
+latEDC=-75.1
 
 RLDir=sys.argv[1]
 if RLDir[-1]!='/':
@@ -16,22 +24,34 @@ m = Basemap(projection='stere', lat_ts=-71, lat_0=-90, lon_0=180, llcrnrlon=-135
 #m.fillcontinents(color='white',lake_color='aqua')
 #m.drawmapboundary(fill_color='aqua')
 
-m.drawparallels(np.arange(-90.,81.,5.))
-m.drawmeridians(np.arange(-180.,181.,10.), latmax=85.)
+m.drawparallels(np.arange(-90.,81.,5.), dashes=[1, 2], color='0.5', linewidths=0.5)
+m.drawmeridians(np.arange(-180.,181.,10.), latmax=85., dashes=[1, 2], color='0.5', linewidths=0.5)
+
+#Draw bed shade
+#I = plt.imread(RLDir+'bedmap2/bedmap2_bed_shade.tif')
+#I=I[::-1,:]
+##I=np.where(I==-9999,np.nan,I)
+#m.imshow(I)
+
+img = Image.open(RLDir+'bedmap2/bedmap2_bed_shade.tif')
+arr = np.asarray(img)
+arr=np.where(arr==-9999,np.nan,arr)
+m.imshow(arr, cmap='Greys', origin='upper', vmin=180., vmax=220.)
 
 #Draw bed topography
 raster = gdal.Open(RLDir+'bedmap2/bedmap2_bed.txt')
 band = raster.GetRasterBand(1)
 array = band.ReadAsArray()
 array=np.where(array==-9999,np.nan,array)
-array=array[::-1,:]
+#array=array[::-1,:]
 
 norm = Normalize(vmin=-3000.,vmax=3000.)
 #from matplotlib.colors import LightSource
 #ls = LightSource(azdeg = 90, altdeg = 20)
-#rgb = ls.shade(array, plt.cm.Greys)
-#im = m.imshow(rgb, cmap='terrain', norm=norm)
-m.imshow(array, cmap='terrain', norm=norm)
+#rgb = ls.shade(array, cm.GMT_haxby)
+#im = m.imshow(rgb, norm=norm)
+
+m.imshow(array, cmap='terrain', norm=norm, alpha=0.5, origin='upper')
 m.colorbar()
 
 
@@ -46,7 +66,7 @@ y = np.linspace(0, m.urcrnry, array2.shape[0])
 
 xx, yy = np.meshgrid(x, y)
 
-m.contour(xx,yy, array2[::-1,:], colors='k')
+m.contour(xx,yy, array2[::-1,:], colors='0.5', linewidths=0.5)
 
 #Draw continent's contour
 raster3 = gdal.Open(RLDir+'bedmap2/bedmap2_icemask_grounded_and_shelves.txt')
@@ -57,9 +77,15 @@ array3 = band3.ReadAsArray()
 x = np.linspace(0, m.urcrnrx, array3.shape[1])
 y = np.linspace(0, m.urcrnry, array3.shape[0])
 xx, yy = np.meshgrid(x, y)
-m.contour(xx,yy, array3[::-1,:], colors='k')
+m.contour(xx,yy, array3[::-1,:], colors='0.5', linewidths=0.5)
 
-m.scatter(-75., 123.)
+xEDC,yEDC=m(lonEDC,latEDC)
+m.scatter(xEDC,yEDC, marker='*', c='r', edgecolor='r', s=64)
+x1,y1=m(lon1,lat1)
+x2,y2=m(lon2,lat2)
+xsquare=np.array([x1,x1,x2,x2,x1])
+ysquare=np.array([y1,y2,y2,y1,y1])
+m.plot(xsquare,ysquare, linestyle='solid', color='k')
 
 
 plt.savefig(RLDir+'Bedmap2.pdf', format='pdf', bbox_inches='tight')

@@ -112,7 +112,7 @@ def interp1d_lin_aver_withnan(x,y):
         return yp
     return f
       
-def interp1d_lin_aver(x,y):
+def interp1d_lin_aver(x,y):   #FIXME: there is a problem in this routine when the x are in decreasing order.
     """
     Interpolation of a linear by parts function using averaging.
     This function returns nan when there are all nans in one interpolation interval.
@@ -154,6 +154,8 @@ class RadarLine:
         self.calc_sigma=True
         self.invert_G0=False
         self.settick='auto'
+        self.interp_method='lin_aver'
+        self.distance_unit='km'
 
         #definition of some global parameters
         execfile(self.label+'../parameters-AllRadarLines.py')
@@ -167,11 +169,15 @@ class RadarLine:
         print 'self.is_bedelev',0+self.is_bedelev
         print 'nbcolumns:',nbcolumns
         readarray=np.loadtxt(self.label+'radar-data.txt', usecols=range(nbcolumns))
+        if readarray[0,4]>readarray[-1,4]:
+            readarray=readarray[::-1,:]
         self.LON_raw=readarray[:,0]
         self.LAT_raw=readarray[:,1]
         self.x_raw=readarray[:,2]
         self.y_raw=readarray[:,3]
         self.distance_raw=readarray[:,4]
+        if self.distance_unit=='m':
+            self.distance_raw=self.distance_raw/1000.
 #        self.thk_raw=readarray[:,5]*self.dilatation_factor
         self.thk_raw=readarray[:,5]+self.firn_correction
         if self.is_bedelev:
@@ -209,24 +215,43 @@ class RadarLine:
 #        self.distance=np.arange(90, 100+self.resolution, self.resolution) 
 #        f=interp1d(self.distance_raw,self.thk_raw)  #TODO: we want to integrate here to smooth the record. Same for iso.
 #        self.thk=f(self.distance)
-        f=interp1d_stair_aver(self.distance_raw,self.thk_raw)    #TODO: the input function is not a staircase one
+        if self.interp_method=='stair_aver':
+            f=interp1d_stair_aver(self.distance_raw,self.thk_raw)    #TODO: the input function is not a staircase one
+        elif self.interp_method=='lin_aver':
+            f=interp1d_lin_aver(self.distance_raw,self.thk_raw)    #TODO: the input function is not a staircase one
+        else:
+            print 'interpolation method not recognized'
+            quit()
         self.thk=f(np.concatenate((self.distance-self.resolution/2, np.array([self.distance[-1]+self.resolution/2]))))
+#        print 'Interpolation of bedrock: done.'
         self.iso=np.zeros((self.nbiso,np.size(self.distance)))
         self.iso_modage=np.empty_like(self.iso)
         self.iso_EDC=np.zeros(self.nbiso)
 
-#        print 'test'
+
 
         for i in range(self.nbiso):
-            f=interp1d_lin_aver(self.distance_raw,self.iso_raw[i,:])
+            if self.interp_method=='stair_aver':
+                f=interp1d_stair_aver(self.distance_raw,self.iso_raw[i,:])
+            elif self.interp_method=='lin_aver':
+                f=interp1d_lin_aver(self.distance_raw,self.iso_raw[i,:])
+            else:
+                print 'interpolation method not recognized'
+                quit()
             self.iso[i,:]=f(np.concatenate((self.distance-self.resolution/2, np.array([self.distance[-1]+self.resolution/2]))))
+#            print 'Interpolation of isochrone no: ',i,': done.'
 
-#        print 'test2'
 
         f=interp1d(self.distance_raw,self.LON_raw)
         self.LON=f(self.distance)
         f=interp1d(self.distance_raw, self.LAT_raw)
         self.LAT=f(self.distance)
+
+        self.LON_twtt=np.empty_like(self.distance)
+        self.LAT_twtt=np.empty_like(self.distance)
+        for j in range(np.size(self.distance)):
+            self.LON_twtt[j]=self.LON_raw[np.argmin(np.absolute(self.LON_raw-self.LON[j])+np.absolute(self.LAT_raw-self.LAT[j]))]
+            self.LAT_twtt[j]=self.LAT_raw[np.argmin(np.absolute(self.LON_raw-self.LON[j])+np.absolute(self.LAT_raw-self.LAT[j]))]
 
 
 
@@ -346,15 +371,22 @@ class RadarLine:
         self.age150m=np.empty_like(self.distance)
         self.age200m=np.empty_like(self.distance)
         self.age250m=np.empty_like(self.distance)
+        self.height0dot6Myr=np.nan*np.ones_like(self.distance)
         self.height0dot8Myr=np.nan*np.ones_like(self.distance)
         self.height1Myr=np.nan*np.ones_like(self.distance)
         self.height1dot2Myr=np.nan*np.ones_like(self.distance)
         self.height1dot5Myr=np.nan*np.ones_like(self.distance)
+        self.twtt0dot6Myr=np.nan*np.ones_like(self.distance)
+        self.twtt0dot8Myr=np.nan*np.ones_like(self.distance)
+        self.twtt1Myr=np.nan*np.ones_like(self.distance)
+        self.twtt1dot2Myr=np.nan*np.ones_like(self.distance)
+        self.twtt1dot5Myr=np.nan*np.ones_like(self.distance)
         self.sigmabotage=np.empty_like(self.distance)
         self.agebotmin=np.empty_like(self.distance)
         self.age_density1Myr=np.nan*np.ones_like(self.distance)
         self.age_density1dot2Myr=np.nan*np.ones_like(self.distance)
         self.age_density1dot5Myr=np.nan*np.ones_like(self.distance)
+        self.twttBed=np.nan*np.ones_like(self.distance)
 
 
 
@@ -435,7 +467,7 @@ class RadarLine:
 #            self.agesteady[i,:]=np.where(self.tau[i,:]+self.tau[i-1,:]>0,self.agesteady[i-1,:]+(self.depthie[i,:]-self.depthie[i-1,:])/self.a/(self.tau[i,:]+self.tau[i-1,:])*2,1000000)
 #            self.agesteady[i,:]=np.where(self.agesteady[i,:]<1000000,self.agesteady[i,:],1000000)
 
-        f=interp1d(np.concatenate((np.array([-1000000000]),self.AICC2012_steadyage,np.array([1000000*self.AICC2012_steadyage[-1]]))),np.concatenate((np.array([self.AICC2012_age[0]]),self.AICC2012_age,np.array([1000000*self.AICC2012_age[-1]]))))
+        f=interp1d(np.concatenate((np.array([-1000000000]),self.AICC2012_steadyage,np.array([1e9*self.AICC2012_steadyage[-1]]))),np.concatenate((np.array([self.AICC2012_age[0]]),self.AICC2012_age,np.array([1e9*self.AICC2012_age[-1]]))))
         self.age[:,j]=f(self.agesteady[:,j])
 
         f=interp1d(self.depth[:,j],self.age[:,j])
@@ -458,22 +490,39 @@ class RadarLine:
             self.age_density1dot5Myr[j]=h1(1500000)
         else:
             self.age_density1dot5Myr[j]=np.nan
+        if max(self.age[:,j])>=600000:
+            self.height0dot6Myr[j]=self.thk[j]-h2(600000)
+            self.twtt0dot6Myr[j]=h2(600000)*100/84.248+250.
+        else:
+            self.height0dot6Myr[j]=np.nan
+            self.twtt0dot6Myr[j]=-98765.0
         if max(self.age[:,j])>=800000:
             self.height0dot8Myr[j]=self.thk[j]-h2(800000)
+            self.twtt0dot8Myr[j]=h2(800000)*100/84.248+250.
         else:
             self.height0dot8Myr[j]=np.nan
+            self.twtt0dot8Myr[j]=-98765.0
         if max(self.age[:,j])>=1000000:
             self.height1Myr[j]=self.thk[j]-h2(1000000)
+            self.twtt1Myr[j]=h2(1000000)*100/84.248+250.
         else:
             self.height1Myr[j]=np.nan
+            self.twtt1Myr[j]=-98765.0
         if max(self.age[:,j])>=1200000:
             self.height1dot2Myr[j]=self.thk[j]-h2(1200000)
+            self.twtt1dot2Myr[j]=h2(1200000)*100/84.248+250.
         else:
             self.height1dot2Myr[j]=np.nan
+            self.twtt1dot2Myr[j]=-98765.0
         if max(self.age[:,j])>=1500000:
             self.height1dot5Myr[j]=self.thk[j]-h2(1500000)
+            self.twtt1dot5Myr[j]=h2(1500000)*100/84.248+250.
         else:
             self.height1dot5Myr[j]=np.nan
+            self.twtt1dot5Myr[j]=-98765.0
+
+        self.twttBed[j]=self.thk[j]*100/84.248+250.  #TODO: make a function to convert to twtt, and make an array for the different isochrones.
+
 
         return np.concatenate(( np.array([self.a[j]]),np.array([self.m[j]]),np.array([self.pprime[j]]),self.age[:,j],np.log(self.age[1:,j]),np.array([self.G0[j]]) ))
 
@@ -1146,10 +1195,25 @@ class RadarLine:
             np.savetxt(f,np.transpose(output), delimiter="\t") 
 
     def bot_age_save(self):
-        output=np.vstack((self.LON,self.LAT,self.distance,self.agebot,self.agebotmin,self.age100m,self.age150m,self.age200m,self.age250m,self.age_density1Myr,self.age_density1dot2Myr,self.age_density1dot5Myr,self.height0dot8Myr,self.height1Myr,self.height1dot2Myr,self.height1dot5Myr))
+        output=np.vstack((self.LON,self.LAT,self.distance,self.thk,self.agebot,self.agebotmin,self.age100m,self.age150m,self.age200m,self.age250m,self.age_density1Myr,self.age_density1dot2Myr,self.age_density1dot5Myr,self.height0dot6Myr,self.height0dot8Myr,self.height1Myr,self.height1dot2Myr,self.height1dot5Myr))
         with open(self.label+'agebottom.txt','w') as f:
-            f.write('#LON\tLAT\tdistance(km)\tage60m(yr-b1950)\tage-min(yr-b1950)\tage100m\tage150m\tage200m\tage250\tage_density1Myr\tage_density1.2Myr\tage_density1.5Myr\theight0.8Myr\theight1Myr\theight1.2Myr\theight1.5Myr\n')
+            f.write('#LON\tLAT\tthickness(m)\tdistance(km)\tage60m(yr-b1950)\tage-min(yr-b1950)\tage100m\tage150m\tage200m\tage250\tage_density1Myr\tage_density1.2Myr\tage_density1.5Myr\theight0.6Myr\theight0.8Myr\theight1Myr\theight1.2Myr\theight1.5Myr\n')
             np.savetxt(f,np.transpose(output), delimiter="\t") 
+
+    def twtt_save(self):
+#        b=np.chararray((np.size(self.distance)), itemsize=20)
+#        b[:]=RLlabel
+#        print b
+#        print self.LON
+#        output=np.vstack((self.LON_twtt,self.LAT_twtt,self.twtt1Myr))
+        current_folder_path, current_folder_name = os.path.split(RL.label[:-1])
+#        print 'folder: ',RL.label,current_folder_name
+        with open(self.label+'twtt.txt','w') as f:
+            f.write('#LON\tLAT\ttwtt-0.6Myr(lk)\ttwtt-0.8Myr(lk)\ttwtt-1Myr(lk)\ttwtt-1.2Myr(lk)\ttwtt-1.5Myr(lk)\tself.twttBed(lk)\tLabel\n')
+            for j in range(np.size(self.distance)):
+                f.write('{0:11}'.format(str(self.LON_twtt[j]))+'\t'+'{0:12}'.format(str(self.LAT_twtt[j]))+'\t'+'{0:13}'.format(str(self.twtt0dot6Myr[j]))+'\t'+'{0:13}'.format(str(self.twtt0dot8Myr[j]))+'\t'+'{0:13}'.format(str(self.twtt1Myr[j]))+'\t'+'{0:13}'.format(str(self.twtt1dot2Myr[j]))+'\t'+'{0:13}'.format(str(self.twtt1dot5Myr[j]))+'\t'+'{0:13}'.format(str(self.twttBed[j]))+'\t'+current_folder_name+'\n')
+#            np.savetxt(f,np.transpose(output), delimiter="\t") 
+
 
     def EDC(self):
         f=interp1d(self.distance,self.age)
@@ -1324,4 +1388,5 @@ if RL.is_EDC:
     RL.EDC()
 #RL.max_age()
 RL.bot_age_save()
+RL.twtt_save()
 print 'Program execution time: ', time.time() - start_time, 'seconds' 
