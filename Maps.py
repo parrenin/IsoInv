@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 import gdal
 import sys
 
-run_model=True
-output_format="pdf"
+run_model=False
+output_format="png"
 #write_data=True
 lat1=-75.5
 lon1=128.
@@ -19,6 +19,11 @@ lon2=118.1
 #lon1=124.
 #lat2=-75.
 #lon2=121.
+lon1_bm2=-135
+lat1_bm2=-48.458667
+lon2_bm2=45
+lat2_bm2=-48.458667
+##
 lonEDC=123.+21./60.
 latEDC=-75.1
 dotsize=2.
@@ -28,7 +33,8 @@ pad='15%'
 
 list_RL=['ICP7_JKB2n_EDMC02a/','ICP7_JKB2n_F12T01b/','ICP7_JKB2n_F16T04a/','ICP7_JKB2n_F17T01a/','ICP7_JKB2n_RIDGE1a/','MCM_JKB1a_EDMC01a/','OIA_JKB2n_X39a/','OIA_JKB2n_X45a/','OIA_JKB2n_X48a/', 'OIA_JKB2n_X54a/','OIA_JKB2n_X57a/','OIA_JKB2n_X60a/','OIA_JKB2n_X63a/','OIA_JKB2n_X66a/','OIA_JKB2n_X69a/','OIA_JKB2n_X72a/','OIA_JKB2n_Y15a/','OIA_JKB2n_Y25a/','OIA_JKB2n_Y52a/','OIA_JKB2n_Y60a/', 'OIA_JKB2n_Y64a/','OIA_JKB2n_Y68a/','OIA_JKB2n_Y70b/','OIA_JKB2n_Y72a/','OIA_JKB2n_Y74a/','OIA_JKB2n_Y75a/','OIA_JKB2n_Y76a/','OIA_JKB2n_Y77a/','OIA_JKB2n_Y78a/','OIA_JKB2n_Y79a/','OIA_JKB2n_Y80a/', 'OIA_JKB2n_Y81a/','OIA_JKB2n_Y82a/','OIA_JKB2n_Y84a/','OIA_JKB2n_Y86a/','OIA_JKB2n_Y88a/','OIA_JKB2n_Y90a/','VCD_JKB2g_DVD01a/','WSB_JKB2h_R40b/']
 
-list_RL_extra=['BAS']
+#'BAS'
+list_RL_extra=[]
 
 #Setting RadarLines directory
 RLDir=sys.argv[1]
@@ -41,7 +47,7 @@ iso_age=np.concatenate((np.array([0]),readarray[:,0]))
 
 #Running model for each radar line
 if run_model:
-    for i,RLlabel in enumerate(list_RL):
+    for i,RLlabel in enumerate(list_RL+list_RL_extra):
         directory=RLDir+RLlabel
         sys.argv=['AgeModel.py',directory]
         execfile('AgeModel.py')
@@ -96,7 +102,7 @@ for i,MapLabel in enumerate(list_maps):
     fig=plt.figure(MapLabel,figsize=(21/2.54,21/2.54))
     plt.title(MapLabel, y=1.05)
 #    map0 = Basemap(projection='spstere', lat_ts=-71, boundinglat=-59.996849, lon_0=180, rsphere=(6378137.00,6356752.3142))
-    map0 = Basemap(projection='stere', lat_ts=-71, lat_0=-90, lon_0=180, llcrnrlon=-135,llcrnrlat=-48.458667, urcrnrlon=45,urcrnrlat=-48.458667, rsphere=(6378137.00,6356752.3142))
+    map0 = Basemap(projection='stere', lat_ts=-71, lat_0=-90, lon_0=180, llcrnrlon=lon1_bm2,llcrnrlat=lat1_bm2, urcrnrlon=lon2_bm2,urcrnrlat=lat2_bm2, rsphere=(6378137.00,6356752.3142))
 #    lon,lat=map0(-3333500, 0, inverse=True)
 #    print lat
 #    print map0(0,-60.)
@@ -181,8 +187,25 @@ for i,MapLabel in enumerate(list_maps):
 
 #    if MapLabel[:4]<>'':
 #        cs=map1.imshow(zz, extent=[-3333,3333,-3333,3333], alpha=0.25)
-        levels=np.arange(-1000., 900., 100.)
-        cs=map1.contourf(xx,yy,zz, levels, cmap='terrain', alpha=0.25)
+    levels=np.arange(-1000., 900., 100.)
+    cs=map1.contourf(xx,yy,zz, levels, cmap='terrain', alpha=0.25, linestyle='')
+
+    
+#    x1_bm2,y1_bm2=map1(lon1_bm2,lat1_bm2)
+#    x2_bm2,y2_bm2=map1(lon2_bm2,lat2_bm2)
+#    print 'x1_bm2: ', x1_bm2
+#    print 'x2_bm2: ', x2_bm2
+#    x1=map1.llcrnrx
+#    print 'x1: ',x1
+#    y1=map1.llcrnry
+#    x2=map1.urcrnrx
+#    y2=map1.urcrnry
+#    plt.imshow(zz, cmap='terrain', extent=[x1_bm2,x2_bm2,y1_bm2,y2_bm2])
+#    map1.llcrnrx=x1
+#    map1.llcrnry=y1
+#    map1.urcrnrx=x2
+#    map1.urcrnry=y2
+
 #        from matplotlib.colors import LightSource
 #        ls = LightSource(azdeg = 90, altdeg = 20)
 #        rgb = ls.shade(zz, plt.cm.terrain)

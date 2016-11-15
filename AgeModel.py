@@ -151,6 +151,7 @@ class RadarLine:
 
     def init(self):
         self.is_bedelev=False
+        self.is_trace=False
         self.calc_sigma=True
         self.invert_G0=False
         self.settick='auto'
@@ -165,10 +166,10 @@ class RadarLine:
 
 
         #Reading the radar dataset
-        nbcolumns=6+self.nbiso+self.is_bedelev
-        print 'self.is_bedelev',0+self.is_bedelev
+        nbcolumns=6+self.nbiso+self.is_bedelev+self.is_trace
         print 'nbcolumns:',nbcolumns
         readarray=np.loadtxt(self.label+'radar-data.txt', usecols=range(nbcolumns))
+        print np.shape(readarray)
         if readarray[0,4]>readarray[-1,4]:
             readarray=readarray[::-1,:]
         self.LON_raw=readarray[:,0]
@@ -180,11 +181,17 @@ class RadarLine:
             self.distance_raw=self.distance_raw/1000.
 #        self.thk_raw=readarray[:,5]*self.dilatation_factor
         self.thk_raw=readarray[:,5]+self.firn_correction
+        index=6
         if self.is_bedelev:
-            self.bedelev=readarray[:,6]-self.firn_correction
-            self.iso_raw=np.transpose(readarray[:,7:7+self.nbiso])+self.firn_correction
-        else:
-            self.iso_raw=np.transpose(readarray[:,6:6+self.nbiso])+self.firn_correction
+            self.bedelev=readarray[:,index]-self.firn_correction
+            index=index+1
+        if self.is_trace:
+            self.trace=readarray[:,index]
+            index=index+1
+        print self.nbiso
+        self.iso_raw=np.transpose(readarray[:,index:index+self.nbiso])+self.firn_correction
+        print np.shape(self.iso_raw)
+        print self.iso_raw[:,0]
 
 #        #Interpolation of the radar dataset
 #        if self.reverse_distance:
@@ -492,36 +499,36 @@ class RadarLine:
             self.age_density1dot5Myr[j]=np.nan
         if max(self.age[:,j])>=600000:
             self.height0dot6Myr[j]=self.thk[j]-h2(600000)
-            self.twtt0dot6Myr[j]=h2(600000)*100/84.248+250.
+            self.twtt0dot6Myr[j]=(h2(600000)-self.firn_correction)*100/84.248+250.
         else:
             self.height0dot6Myr[j]=np.nan
             self.twtt0dot6Myr[j]=-98765.0
         if max(self.age[:,j])>=800000:
             self.height0dot8Myr[j]=self.thk[j]-h2(800000)
-            self.twtt0dot8Myr[j]=h2(800000)*100/84.248+250.
+            self.twtt0dot8Myr[j]=(h2(800000)-self.firn_correction)*100/84.248+250.
         else:
             self.height0dot8Myr[j]=np.nan
             self.twtt0dot8Myr[j]=-98765.0
         if max(self.age[:,j])>=1000000:
             self.height1Myr[j]=self.thk[j]-h2(1000000)
-            self.twtt1Myr[j]=h2(1000000)*100/84.248+250.
+            self.twtt1Myr[j]=(h2(1000000)-self.firn_correction)*100/84.248+250.
         else:
             self.height1Myr[j]=np.nan
             self.twtt1Myr[j]=-98765.0
         if max(self.age[:,j])>=1200000:
             self.height1dot2Myr[j]=self.thk[j]-h2(1200000)
-            self.twtt1dot2Myr[j]=h2(1200000)*100/84.248+250.
+            self.twtt1dot2Myr[j]=(h2(1200000)-self.firn_correction)*100/84.248+250.
         else:
             self.height1dot2Myr[j]=np.nan
             self.twtt1dot2Myr[j]=-98765.0
         if max(self.age[:,j])>=1500000:
             self.height1dot5Myr[j]=self.thk[j]-h2(1500000)
-            self.twtt1dot5Myr[j]=h2(1500000)*100/84.248+250.
+            self.twtt1dot5Myr[j]=(h2(1500000)-self.firn_correction)*100/84.248+250.
         else:
             self.height1dot5Myr[j]=np.nan
             self.twtt1dot5Myr[j]=-98765.0
 
-        self.twttBed[j]=self.thk[j]*100/84.248+250.  #TODO: make a function to convert to twtt, and make an array for the different isochrones.
+        self.twttBed[j]=(self.thk[j]-self.firn_correction)*100/84.248+250.  #TODO: make a function to convert to twtt, and make an array for the different isochrones.
 
 
         return np.concatenate(( np.array([self.a[j]]),np.array([self.m[j]]),np.array([self.pprime[j]]),self.age[:,j],np.log(self.age[1:,j]),np.array([self.G0[j]]) ))
@@ -1195,7 +1202,7 @@ class RadarLine:
             np.savetxt(f,np.transpose(output), delimiter="\t") 
 
     def bot_age_save(self):
-        output=np.vstack((self.LON,self.LAT,self.distance,self.thk,self.agebot,self.agebotmin,self.age100m,self.age150m,self.age200m,self.age250m,self.age_density1Myr,self.age_density1dot2Myr,self.age_density1dot5Myr,self.height0dot6Myr,self.height0dot8Myr,self.height1Myr,self.height1dot2Myr,self.height1dot5Myr))
+        output=np.vstack((self.LON,self.LAT,self.distance,self.thk,self.agebot,self.agebotmin,self.age100m,self.age150m,self.age200m,self.age250m,self.age_density1Myr,self.age_density1dot2Myr,self.age_density1dot5Myr, self.height0dot6Myr,self.height0dot8Myr,self.height1Myr,self.height1dot2Myr,self.height1dot5Myr))
         with open(self.label+'agebottom.txt','w') as f:
             f.write('#LON\tLAT\tthickness(m)\tdistance(km)\tage60m(yr-b1950)\tage-min(yr-b1950)\tage100m\tage150m\tage200m\tage250\tage_density1Myr\tage_density1.2Myr\tage_density1.5Myr\theight0.6Myr\theight0.8Myr\theight1Myr\theight1.2Myr\theight1.5Myr\n')
             np.savetxt(f,np.transpose(output), delimiter="\t") 
