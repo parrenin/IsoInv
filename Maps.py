@@ -188,9 +188,13 @@ for i,MapLabel in enumerate(list_maps):
 #    if MapLabel[:4]<>'':
 #        cs=map1.imshow(zz, extent=[-3333,3333,-3333,3333], alpha=0.25)
     levels=np.arange(-1000., 900., 100.)
-    cs=map1.contourf(xx,yy,zz, levels, cmap='terrain', alpha=0.25, linestyle='')
+#    cs=map1.contourf(xx,yy,zz, levels, cmap='terrain', alpha=0.25, linestyle='')
+    print x1,y1
+    print map0.urcrnrx,map0.urcrnry
+    print map1.urcrnrx,map1.urcrnry
+    print min(x),max(x),min(y),max(y)
+    plt.imshow(zz[::-1,:], extent=[max(x),min(x),max(y),min(y)], cmap='terrain', norm=Normalize(vmin=-1000, vmax=900), alpha=0.4)
 
-    
 #    x1_bm2,y1_bm2=map1(lon1_bm2,lat1_bm2)
 #    x2_bm2,y2_bm2=map1(lon2_bm2,lat2_bm2)
 #    print 'x1_bm2: ', x1_bm2
@@ -231,7 +235,7 @@ for i,MapLabel in enumerate(list_maps):
 #    plt.ylim=(y1,y2)
 
     ##Draw color bar
-    cb0=map1.colorbar(cs,pad=pad)
+    cb0=plt.colorbar(shrink=0.7)
     cb0.set_label('Bedrock elevation (m)')
 
     #Draw continent's contour

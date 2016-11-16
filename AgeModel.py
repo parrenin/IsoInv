@@ -157,6 +157,7 @@ class RadarLine:
         self.settick='auto'
         self.interp_method='lin_aver'
         self.distance_unit='km'
+        self.nbhor=0
 
         #definition of some global parameters
         execfile(self.label+'../parameters-AllRadarLines.py')
@@ -166,10 +167,9 @@ class RadarLine:
 
 
         #Reading the radar dataset
-        nbcolumns=6+self.nbiso+self.is_bedelev+self.is_trace
+        nbcolumns=6+self.nbiso+self.is_bedelev+self.is_trace+self.nbhor
         print 'nbcolumns:',nbcolumns
         readarray=np.loadtxt(self.label+'radar-data.txt', usecols=range(nbcolumns))
-        print np.shape(readarray)
         if readarray[0,4]>readarray[-1,4]:
             readarray=readarray[::-1,:]
         self.LON_raw=readarray[:,0]
@@ -188,10 +188,9 @@ class RadarLine:
         if self.is_trace:
             self.trace=readarray[:,index]
             index=index+1
-        print self.nbiso
         self.iso_raw=np.transpose(readarray[:,index:index+self.nbiso])+self.firn_correction
-        print np.shape(self.iso_raw)
-        print self.iso_raw[:,0]
+        index=index+self.nbiso
+        self.hor_raw=np.transpose(readarray[:,index:index+self.nbhor])+self.firn_correction
 
 #        #Interpolation of the radar dataset
 #        if self.reverse_distance:
@@ -232,7 +231,9 @@ class RadarLine:
         self.thk=f(np.concatenate((self.distance-self.resolution/2, np.array([self.distance[-1]+self.resolution/2]))))
 #        print 'Interpolation of bedrock: done.'
         self.iso=np.zeros((self.nbiso,np.size(self.distance)))
+        self.hor=np.zeros((self.nbhor,np.size(self.distance)))
         self.iso_modage=np.empty_like(self.iso)
+        self.hor_modage=np.empty_like(self.hor)
         self.iso_EDC=np.zeros(self.nbiso)
 
 
@@ -247,6 +248,16 @@ class RadarLine:
                 quit()
             self.iso[i,:]=f(np.concatenate((self.distance-self.resolution/2, np.array([self.distance[-1]+self.resolution/2]))))
 #            print 'Interpolation of isochrone no: ',i,': done.'
+
+        for i in range(self.nbhor):
+            if self.interp_method=='stair_aver':
+                f=interp1d_stair_aver(self.distance_raw,self.hor_raw[i,:])
+            elif self.interp_method=='lin_aver':
+                f=interp1d_lin_aver(self.distance_raw,self.hor_raw[i,:])
+            else:
+                print 'interpolation method not recognized'
+                quit()
+            self.hor[i,:]=f(np.concatenate((self.distance-self.resolution/2, np.array([self.distance[-1]+self.resolution/2]))))
 
 
         f=interp1d(self.distance_raw,self.LON_raw)
@@ -483,6 +494,7 @@ class RadarLine:
         self.age150m[j]=f(max(self.depth[:,j])-150)
         self.age200m[j]=f(max(self.depth[:,j])-200)
         self.age250m[j]=f(max(self.depth[:,j])-250)
+        self.hor_modage[:,j]=f(self.hor[:,j])
         h1=interp1d(self.age[:-1,j],self.age_density[:,j])
         h2=interp1d(self.age[:,j],self.depth[:,j])
         if self.agebot[j]>=1000000:
@@ -804,15 +816,22 @@ class RadarLine:
 #Plotting the raw and interpolated radar datasets
     def data_display(self):
         plt.figure('Data')
-        plt.plot(self.distance_raw, self.thk_raw, label='raw bedrock', color='b', linewidth=2)
+        plt.plot(self.distance_raw, self.thk_raw, label='raw bedrock', color='0.5', linewidth=2)
         plt.plot(self.distance, self.thk, label='interpolated bedrock', color='k', linewidth=2)
         for i in range(self.nbiso):
             if i==0:
-                plt.plot(self.distance_raw, self.iso_raw[i,:], color='b', label='raw isochrones')
-                plt.plot(self.distance, self.iso[i,:], color='k', label='interpolated isochrones')
+                plt.plot(self.distance_raw, self.iso_raw[i,:], color='c', label='raw isochrones')
+                plt.plot(self.distance, self.iso[i,:], color='b', label='interpolated isochrones')
             else:
-                plt.plot(self.distance_raw, self.iso_raw[i,:], color='b')
-                plt.plot(self.distance, self.iso[i,:], color='k')
+                plt.plot(self.distance_raw, self.iso_raw[i,:], color='c')
+                plt.plot(self.distance, self.iso[i,:], color='b')
+        for i in range(self.nbhor):
+            if i==0:
+                plt.plot(self.distance_raw, self.hor_raw[i,:], color='y', label='raw horizons')
+                plt.plot(self.distance, self.hor[i,:], color='g', label='interpolated horizons')
+            else:
+                plt.plot(self.distance_raw, self.hor_raw[i,:], color='y')
+                plt.plot(self.distance, self.hor[i,:], color='g')
         if self.is_EDC:
             EDC_x=np.array([self.distance_EDC, self.distance_EDC])
             EDC_y=np.array([0., 3200.])
@@ -842,9 +861,14 @@ class RadarLine:
         plt.plot(self.distance, self.thk, label='obs. bedrock', color='k', linewidth=2)
         for i in range(self.nbiso):
             if i==0:
-                plt.plot(self.distance, self.iso[i,:], color='k', label='obs. isochrones')
+                plt.plot(self.distance, self.iso[i,:], color='w', label='obs. isochrones')
             else:
-                plt.plot(self.distance, self.iso[i,:], color='k')
+                plt.plot(self.distance, self.iso[i,:], color='w')
+        for i in range(self.nbhor):
+            if i==0:
+                plt.plot(self.distance, self.hor[i,:], color='0.5', label='obs. horizons')
+            else:
+                plt.plot(self.distance, self.hor[i,:], color='0.5')
         levels=np.arange(0, 1600000, 100000)
         levels_color=np.arange(0, 1500000, 10000)
         plt.contourf(self.dist, self.depth, self.agesteady, levels_color)
@@ -857,7 +881,7 @@ class RadarLine:
         else:
             plt.xlabel('distance (km)')
         plt.ylabel('depth (m)')
-        plt.legend(loc=2)
+#        plt.legend(loc=2)
         cb=plt.colorbar()
         cb.set_ticks(levels)
         cb.set_ticklabels(levels)
@@ -879,6 +903,11 @@ class RadarLine:
                 plt.plot(self.distance, self.iso[i,:], color='w', label='obs. isochrones')
             else:
                 plt.plot(self.distance, self.iso[i,:], color='w')
+        for i in range(self.nbhor):
+            if i==0:
+                plt.plot(self.distance, self.hor[i,:], color='0.5', label='obs. horizons')
+            else:
+                plt.plot(self.distance, self.hor[i,:], color='0.5')
         levels=np.arange(0, 1600000, 100000)
         levels_color=np.arange(0, 1500000, 10000)
         plt.contourf(self.dist, self.depth, self.age, levels_color)
@@ -1207,6 +1236,18 @@ class RadarLine:
             f.write('#LON\tLAT\tthickness(m)\tdistance(km)\tage60m(yr-b1950)\tage-min(yr-b1950)\tage100m\tage150m\tage200m\tage250\tage_density1Myr\tage_density1.2Myr\tage_density1.5Myr\theight0.6Myr\theight0.8Myr\theight1Myr\theight1.2Myr\theight1.5Myr\n')
             np.savetxt(f,np.transpose(output), delimiter="\t") 
 
+    def hor_age_save(self):
+        output=np.vstack((self.LON, self.LAT, self.distance, self.hor_modage))
+        header='#LON\tLAT\tdistance(km)'
+        for i in range(self.nbhor):
+            header=header+'\thor_no_'+str(i+1)
+        header=header+'\n'
+        with open(self.label+'agehorizons.txt','w') as f:
+            f.write(header)
+            np.savetxt(f,np.transpose(output), delimiter="\t") 
+        for i in range(self.nbhor):
+            print 'horizon no:',i+1,', average age: ',np.nanmean(self.hor_modage[i,:]),', stdev age: ',np.nanstd(self.hor_modage[i,:])
+
     def twtt_save(self):
 #        b=np.chararray((np.size(self.distance)), itemsize=20)
 #        b[:]=RLlabel
@@ -1395,5 +1436,6 @@ if RL.is_EDC:
     RL.EDC()
 #RL.max_age()
 RL.bot_age_save()
+RL.hor_age_save()
 RL.twtt_save()
 print 'Program execution time: ', time.time() - start_time, 'seconds' 
