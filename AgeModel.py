@@ -152,6 +152,7 @@ class RadarLine:
     def init(self):
         self.is_bedelev=False
         self.is_trace=False
+        self.is_dsz=False
         self.calc_sigma=True
         self.invert_G0=False
         self.settick='auto'
@@ -546,103 +547,8 @@ class RadarLine:
         return np.concatenate(( np.array([self.a[j]]),np.array([self.m[j]]),np.array([self.pprime[j]]),self.age[:,j],np.log(self.age[1:,j]),np.array([self.G0[j]]) ))
 
     def model(self):  #TODO: kill this or make a call to model(j)
-        self.p=-1+np.exp(self.pprime)
-        #Steady plug flow without melting thermal model (cf. document from Catherine)
-        self.Tf=Tf(rhog*ggrav*self.thkie)     #FIXME: take into account temporal variations of ice thickness
-#We assume first that we have melting point everywhere
-        self.Tm=(self.Ts+self.Tf)/2
-        self.alpha=np.sqrt(self.a/365./24./3600./self.thk/Kg(self.Tm, 1.)*rhog*cg(self.Tm)/2.)
-        self.DeltaT=self.Ts-self.Tf  
-        self.G=-self.DeltaT*2*Kg(self.Tm, 1.)*self.alpha/m.sqrt(m.pi)/erf(self.thkie*self.alpha)
-        self.is_fusion=np.where(self.G0>self.G,True,False)
-        self.G=np.where(self.is_fusion, self.G, self.G0)
-        self.m=(self.G0-self.G)*365.242*24*3600/rhog/Lf
-        self.T=self.Ts-self.G*m.sqrt(m.pi)/2./Kg(self.Tm, 1.)/self.alpha*(erf(self.alpha*self.zeta*self.thkie)-erf(self.alpha*self.thkie))
-#        self.m=np.zeros(np.size(self.distance))
-        self.T_anal=self.T+0.
-
-        #Mechanical model
-        self.mu=self.m/self.a
-        #self.s=variables[2*np.size(self.distance):3*np.size(self.distance)]
-        self.omega_D=1-(self.p+2)/(self.p+1)*(1-self.zetaie)+1/(self.p+1)*(1-self.zetaie)**(self.p+2)	#Parrenin et al. (CP, 2007a) 2.2 (3)
-        self.omega=self.s*self.zetaie+(1-self.s)*self.omega_D   #Parrenin et al. (CP, 2007a) 2.2 (2)
-        self.tau=(1-self.mu)*self.omega+self.mu
-        self.uz=-self.a/365.242/24/3600*self.tau
-
-        for it in range(self.tm_iter):
-#            print it
-
-            #Steady non-plug flow thermal model
-            self.G=np.empty_like(self.distance)
-            for j in range(np.size(self.distance)):
-#                print j
-                if self.is_fusion[j]:
-                    self.T[0,j]=self.Ts
-                    self.T[-1,j]=self.Tf[j]
-                    self.Btemp=np.transpose(np.zeros(np.size(self.zetagrid)-2))
-    #                self.Atemp=Kg(self.Tb[j])/self.dzeta/self.thkie[j]*(np.diag(np.ones(np.size(self.zetagrid)-3),1)+np.diag(np.ones(np.size(self.zetagrid)-3),-1)+np.diag(-2*np.ones(np.size(self.zetagrid)-2),0))+0.5*rhog*np.transpose([self.uz[1:-1,j]*cg(self.T[1:-1,j])])*(np.diag(np.ones(np.size(self.zetagrid)-3),1)-np.diag(np.ones(np.size(self.zetagrid)-3),-1))
-    #                self.Btemp[0]=-(Kg(self.Tb[j])/self.dzeta/self.thkie[j]-cg(self.T[1,j])*rhog*self.uz[1,j])*self.Ts
-    #                self.Btemp[-1]=-(Kg(self.Tb[j])/self.dzeta/self.thkie[j]+cg(self.T[-2,j])*rhog*self.uz[-2,j])*self.Tb[j]
-                    self.Atemp=1/(self.dzeta*self.thk[j])*(np.diag(Kg((self.T[1:-2,j]+self.T[2:-1,j])/2, self.D[1:-1,j]),1)+np.diag(Kg((self.T[1:-2,j]+self.T[2:-1,j])/2, self.D[1:-1,j]),-1)+np.diag(-Kg((self.T[:-2,j]+self.T[1:-1,j])/2, self.D[:-1,j])-Kg((self.T[1:-1,j]+self.T[2:,j])/2, self.D[1:,j]),0))
-#                    self.Atemp=self.Atemp-0.5*rhog*np.transpose([self.uz[1:-1,j]])*(np.diag(cg(self.T[1:-2,j]),-1)-np.diag(cg(self.T[2:-1,j]),1))   #TODO:We are missing a term due to heat production by deformation + mistaken formula which is not matrician + missing relative density term?
-#                    print 'shape of uz and cg',np.shape(self.uz[1:-1,j]),np.shape(cg(self.T[1:-1,j])),np.shape(self.uz[1:-1,j]*cg(self.T[1:-1,j]))
-                    self.Atemp=self.Atemp-0.5*rhog*np.transpose([(self.D[:-1,j]+self.D[1:,j])/2*self.uz[1:-1,j]*cg(self.T[1:-1,j])])*(np.diag(np.ones(np.size(self.zetagrid)-3),-1)-np.diag(np.ones(np.size(self.zetagrid)-3),1))   #TODO:We are missing a term due to heat production by deformatio
-#                    self.Btemp[0]=-(Kg((self.T[0,j]+self.T[1,j])/2, self.D[0,j])/self.dzeta/self.thk[j]-0.5*rhog*cg(self.T[0,j])*self.uz[1,j])*self.Ts   #Old formula with wrong indice
-#                    self.Btemp[-1]=-(Kg((self.T[-2,j]+self.T[-1,j])/2, self.D[-1,j])/self.dzeta/self.thk[j]+0.5*rhog*cg(self.T[-1,j])*self.uz[-2,j])*self.Tf[j]   #Old formula with wrong indice
-                    self.Btemp[0]=-(Kg((self.T[0,j]+self.T[1,j])/2, self.D[0,j])/self.dzeta/self.thk[j]-0.5*rhog*(self.D[0,j]+self.D[1,j])/2*cg(self.T[1,j])*self.uz[1,j])*self.Ts
-                    self.Btemp[-1]=-(Kg((self.T[-2,j]+self.T[-1,j])/2, self.D[-1,j])/self.dzeta/self.thk[j]+0.5*rhog*(self.D[-1,j]+self.D[-2,j])/2*cg(self.T[-2,j])*self.uz[-2,j])*self.Tf[j]
-                    self.T[1:-1,j]=np.linalg.solve(self.Atemp,self.Btemp)
-    #                self.G[j]=Kg(self.Tb[j])*(self.T[-1,j]-self.T[-2,j])/(self.depthie[-1,j]-self.depthie[-2,j])
-                    self.G[j]=-Kg((self.T[-1,j]+self.T[-2,j])/2, self.D[-1,j])*(self.T[-2,j]-self.T[-1,j])/(self.depthie[-1,j]-self.depthie[-2,j])
-                    self.m[j]=(self.G0[j]-self.G[j])*365.242*24*3600/rhog/Lf
-                    if self.G0[j]<=self.G[j]:
-                        self.is_fusion[j]=False
-                else:
-                    self.T[0,j]=self.Ts
-                    self.Btemp=np.transpose(np.zeros(np.size(self.zetagrid)-1))
-#                    self.Atemp=1/self.dzeta/self.thk[j]*(np.diag(Kg((self.T[1:-1,j]+self.T[2:,j])/2, self.D[1:,j]),1)+np.diag(Kg((self.T[1:-1,j]+self.T[2:,j])/2, self.D[1:,j]),-1)+np.diag(-Kg((self.T[:-1,j]+self.T[1:,j])/2, self.D[:,j])-np.concatenate((Kg((self.T[1:-1,j]+self.T[2:,j])/2, self.D[1:,j]),np.array([0.]))),0))  #Old buggy formulation
-#                    self.Atemp=self.Atemp-0.5*rhog*np.transpose([(self.D[:,j]+self.D[:,j])/2*self.uz[1:,j]])*(np.diag(np.concatenate((cg(self.T[1:-2,j]),np.array([0.]))),-1)-np.diag(cg(self.T[2:,j]),1))  #Old buggy formulation
-                    self.Atemp=1/(self.dzeta*self.thk[j])*(np.diag(Kg((self.T[1:-2,j]+self.T[2:-1,j])/2, self.D[1:-1,j]),1)+np.diag(Kg((self.T[1:-2,j]+self.T[2:-1,j])/2, self.D[1:-1,j]),-1)+np.diag(-Kg((self.T[:-2,j]+self.T[1:-1,j])/2, self.D[:-1,j])-Kg((self.T[1:-1,j]+self.T[2:,j])/2, self.D[1:,j]),0))
-                    self.Atemp=self.Atemp-0.5*rhog*np.transpose([(self.D[:-1,j]+self.D[1:,j])/2*self.uz[1:-1,j]*cg(self.T[1:-1,j])])*(np.diag(np.ones(np.size(self.zetagrid)-3),-1)-np.diag(np.ones(np.size(self.zetagrid)-3),1))   #TODO:We are missing a term due to heat production by deformation
-                    vector=np.concatenate((np.zeros(np.size(self.zetagrid)-3), np.array([ Kg((self.T[-2,j]+self.T[-1,j])/2, self.D[-1,j])/self.dzeta/self.thk[j] - 0.5*rhog*(self.D[-1,j]+self.D[-2,j])/2*cg(self.T[-2,j])*self.uz[-2,j] ]) ))
-                    self.Atemp=np.concatenate(( self.Atemp, np.array([ vector ]).T ), axis=1)
-                    vector=np.concatenate(( np.zeros(np.size(self.zetagrid)-3), Kg((self.T[-2,j]+self.T[-1,j])/2, self.D[-1,j])/self.dzeta/self.thk[j] * np.array([1,-1]) ))
-                    self.Atemp=np.concatenate(( self.Atemp, np.array([ vector ])  ), axis=0)
-
-                    self.Btemp[0]=-(Kg((self.T[0,j]+self.T[1,j])/2, self.D[0,j])/self.dzeta/self.thk[j]-0.5*(self.D[0,j]+self.D[1,j])/2*rhog*cg(self.T[0,j])*self.uz[1,j])*self.Ts  #Is there an indice problem here?
-                    self.Btemp[-1]=-self.G0[j]
-                    self.T[1:,j]=np.linalg.solve(self.Atemp,self.Btemp)
-                    self.G[j]=self.G0[j]
-                    self.m[j]=0.
-                    if self.T[-1,j]>self.Tf[j]:
-                        self.is_fusion[j]=True
-#            self.is_fusion=np.where(self.G0>self.G,True,False)
-#            self.G=np.where(self.is_fusion, self.G, self.G0)
-#            self.m=(self.G0-self.G)*365.242*24*3600/rhog/Lf
-
-            #Mechanical model
-            self.mu=self.m/self.a
-            #self.s=variables[2*np.size(self.distance):3*np.size(self.distance)]
-#            self.omega_D=1-(self.p+2)/(self.p+1)*(1-self.zetaie)+1/(self.p+1)*(1-self.zetaie)**(self.p+2)	#Parrenin et al. (CP, 2007a) 2.2 (3)
-#            self.omega=self.s*self.zetaie+(1-self.s)*self.omega_D   #Parrenin et al. (CP, 2007a) 2.2 (2)
-            self.tau=(1-self.mu)*self.omega+self.mu
-            self.uz=-self.a/365.242/24/3600*self.tau
-
-
-        self.age_density=np.where((self.tau[1:,]+self.tau[:-1,])/2>0 ,1/self.a/(self.tau[1:,]+self.tau[:-1,])*2,np.nan)
-        self.agesteady=np.cumsum(np.concatenate((np.array([self.age_surf*np.ones(np.size(self.distance))]),(self.depthie[1:,]-self.depthie[:-1,])*self.age_density)), axis=0)
-
-#        for j in range(np.size(self.distance)):
-#            self.agesteady[:,j]=np.cumsum(np.concatenate((np.array([self.age_surf]),(self.depthie[1:,j]-self.depthie[:-1,j])/self.a[j]/(self.tau[1:,j]+self.tau[:-1,j])*2)))
-
-#        self.agesteady[0,:]=self.age_surf
-#        for i in range(1,np.size(self.zetagrid)):
-#            self.agesteady[i,:]=np.where(self.tau[i,:]+self.tau[i-1,:]>0,self.agesteady[i-1,:]+(self.depthie[i,:]-self.depthie[i-1,:])/self.a/(self.tau[i,:]+self.tau[i-1,:])*2,1000000)
-#            self.agesteady[i,:]=np.where(self.agesteady[i,:]<1000000,self.agesteady[i,:],1000000)
-
-        f=interp1d(np.concatenate((np.array([-1000000000]),self.AICC2012_steadyage,np.array([1000000*self.AICC2012_steadyage[-1]]))),np.concatenate((np.array([self.AICC2012_age[0]]),self.AICC2012_age,np.array([1000000*self.AICC2012_age[-1]]))))
-        self.age=f(self.agesteady)
-
+        for j in range(np.size(self.distance)):
+            self.model1D(j)
 
         return np.concatenate((self.a,self.m,self.pprime,self.age.flatten(),self.G0))
 
@@ -826,7 +732,10 @@ class RadarLine:
                 plt.plot(self.distance_raw, self.iso_raw[i,:], color='c')
                 plt.plot(self.distance, self.iso[i,:], color='b')
         for i in range(self.nbhor):
-            if i==0:
+            if self.is_dsz and i==self.nbhor-1:
+                plt.plot(self.distance_raw, self.hor_raw[i,:], color='orange', label='raw DSZ')
+                plt.plot(self.distance, self.hor[i,:], color='r', label='interpolated DSZ')
+            elif i==0:
                 plt.plot(self.distance_raw, self.hor_raw[i,:], color='y', label='raw horizons')
                 plt.plot(self.distance, self.hor[i,:], color='g', label='interpolated horizons')
             else:
@@ -865,7 +774,9 @@ class RadarLine:
             else:
                 plt.plot(self.distance, self.iso[i,:], color='w')
         for i in range(self.nbhor):
-            if i==0:
+            if self.is_dsz and i==self.nbhor-1:
+                plt.plot(self.distance, self.hor[i,:], color='r', label='obs. DSZ')
+            elif i==0:
                 plt.plot(self.distance, self.hor[i,:], color='0.5', label='obs. horizons')
             else:
                 plt.plot(self.distance, self.hor[i,:], color='0.5')
@@ -904,7 +815,9 @@ class RadarLine:
             else:
                 plt.plot(self.distance, self.iso[i,:], color='w')
         for i in range(self.nbhor):
-            if i==0:
+            if self.is_dsz and i==self.nbhor-1:
+                plt.plot(self.distance, self.hor[i,:], color='r', label='obs. DSZ')
+            elif i==0:
                 plt.plot(self.distance, self.hor[i,:], color='0.5', label='obs. horizons')
             else:
                 plt.plot(self.distance, self.hor[i,:], color='0.5')
