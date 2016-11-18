@@ -11,7 +11,7 @@ import random
 from matplotlib.collections import LineCollection
 from matplotlib.colors import LogNorm
 from scipy.interpolate import interp1d
-from scipy.optimize import leastsq, anneal, basinhopping, minimize
+from scipy.optimize import leastsq, basinhopping, minimize
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.special import erf
 
@@ -753,7 +753,7 @@ class RadarLine:
         else:
             plt.xlabel('distance (km)')
         plt.ylabel('depth (m)')
-        plt.legend(loc=1)
+#        plt.legend(loc=1)
         x1,x2,y1,y2 = plt.axis()
         plt.axis((x1,x2,y2,0))
         if self.reverse_distance:
@@ -766,7 +766,8 @@ class RadarLine:
 
     def model_display(self):
 
-        plt.figure('Model steady')
+        fig=plt.figure('Model steady')
+        plotmodel = fig.add_subplot(111, aspect=self.aspect)
         plt.plot(self.distance, self.thk, label='obs. bedrock', color='k', linewidth=2)
         for i in range(self.nbiso):
             if i==0:
@@ -798,7 +799,9 @@ class RadarLine:
         cb.set_ticklabels(levels)
         cb.set_label('Modeled steady age')
         x1,x2,y1,y2 = plt.axis()
-        plt.axis((min(self.distance),max(self.distance),y2,0))
+        if self.max_depth=='auto':
+            self.max_depth=y2
+        plt.axis((min(self.distance),max(self.distance),self.max_depth,0))
         if self.reverse_distance:
             plt.gca().invert_xaxis()
         pp=PdfPages(self.label+'Model-steady.pdf')
@@ -968,7 +971,7 @@ class RadarLine:
         cb=plt.colorbar()
         cb.set_label('Modeled thinning')
         x1,x2,y1,y2 = plt.axis()
-        plt.axis((min(self.distance),max(self.distance),y2,0))
+        plt.axis((min(self.distance),max(self.distance),self.max_depth,0))
         if self.reverse_distance:
             plt.gca().invert_xaxis()
         pp=PdfPages(self.label+'Thinning.pdf')
@@ -992,7 +995,7 @@ class RadarLine:
         cb=plt.colorbar()
         cb.set_label('Modeled temperature (K)')
         x1,x2,y1,y2 = plt.axis()
-        plt.axis((min(self.distance),max(self.distance),y2,0))
+        plt.axis((min(self.distance),max(self.distance),self.max_depth,0))
         if self.reverse_distance:
             plt.gca().invert_xaxis()
         pp=PdfPages(self.label+'Temperature.pdf')
@@ -1278,6 +1281,7 @@ elif RL.opt_method=='none1D':
 elif RL.opt_method=='leastsq1D':
     print 'Optimization by leastsq1D'    
     for j in range(np.size(RL.distance)):
+#        if RL.thk[j]<>np.nan and 
         print 'index along the radar line: ', j
         if RL.invert_G0:
             RL.variables1D=np.array([ RL.a[j],RL.pprime[j],RL.G0[j] ])
