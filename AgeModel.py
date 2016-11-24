@@ -158,7 +158,7 @@ class RadarLine:
     def init(self):
         self.is_bedelev=False
         self.is_trace=False
-        self.is_dsz=False
+        self.nbdsz=0
         self.calc_sigma=True
         self.invert_G0=False
         self.settick='auto'
@@ -738,15 +738,18 @@ class RadarLine:
                 plt.plot(self.distance_raw, self.iso_raw[i,:], color='c')
                 plt.plot(self.distance, self.iso[i,:], color='b')
         for i in range(self.nbhor):
-            if self.is_dsz and i==self.nbhor-1:
-                plt.plot(self.distance_raw, self.hor_raw[i,:], color='orange', label='raw DSZ')
-                plt.plot(self.distance, self.hor[i,:], color='r', label='interpolated DSZ')
-            elif i==0:
+            if i==0:
                 plt.plot(self.distance_raw, self.hor_raw[i,:], color='y', label='raw horizons')
                 plt.plot(self.distance, self.hor[i,:], color='g', label='interpolated horizons')
-            else:
+            elif i>0 and i<self.nbhor-self.nbdsz:
                 plt.plot(self.distance_raw, self.hor_raw[i,:], color='y')
                 plt.plot(self.distance, self.hor[i,:], color='g')
+            elif i==self.nbhor-self.nbdsz:
+                plt.plot(self.distance_raw, self.hor_raw[i,:], color='orange', label='raw DSZ')
+                plt.plot(self.distance, self.hor[i,:], color='r', label='interpolated DSZ')
+            else:
+                plt.plot(self.distance_raw, self.hor_raw[i,:], color='orange')
+                plt.plot(self.distance, self.hor[i,:], color='r')
         if self.is_EDC:
             EDC_x=np.array([self.distance_EDC, self.distance_EDC])
             EDC_y=np.array([0., 3200.])
@@ -781,12 +784,14 @@ class RadarLine:
             else:
                 plt.plot(self.distance, self.iso[i,:], color='w')
         for i in range(self.nbhor):
-            if self.is_dsz and i==self.nbhor-1:
-                plt.plot(self.distance, self.hor[i,:], color='r', label='obs. DSZ')
-            elif i==0:
+            if i==0:
                 plt.plot(self.distance, self.hor[i,:], color='0.5', label='obs. horizons')
-            else:
+            elif i>0 and i<self.nbhor-self.nbdsz:
                 plt.plot(self.distance, self.hor[i,:], color='0.5')
+            elif i==self.nbhor-self.nbdsz:
+                plt.plot(self.distance, self.hor[i,:], color='r', label='obs. DSZ')
+            else:
+                plt.plot(self.distance, self.hor[i,:], color='r')
         levels=np.arange(0, 1600000, 100000)
         levels_color=np.arange(0, 1500000, 10000)
         plt.contourf(self.dist, self.depth, self.agesteady, levels_color)
@@ -824,12 +829,14 @@ class RadarLine:
             else:
                 plt.plot(self.distance, self.iso[i,:], color='w')
         for i in range(self.nbhor):
-            if self.is_dsz and i==self.nbhor-1:
-                plt.plot(self.distance, self.hor[i,:], color='r', label='obs. DSZ')
-            elif i==0:
+            if i==0:
                 plt.plot(self.distance, self.hor[i,:], color='0.5', label='obs. horizons')
-            else:
+            elif i>0 and i<self.nbhor-self.nbdsz:
                 plt.plot(self.distance, self.hor[i,:], color='0.5')
+            elif i==self.nbhor-self.nbdsz:
+                plt.plot(self.distance, self.hor[i,:], color='r', label='obs. DSZ')
+            else:
+                plt.plot(self.distance, self.hor[i,:], color='r')
         levels=np.arange(0, 1600000, 100000)
         levels_color=np.arange(0, 1500000, 10000)
         plt.contourf(self.dist, self.depth, self.age, levels_color)
@@ -915,6 +922,15 @@ class RadarLine:
                 plt.plot(self.distance, self.iso[i,:], color='w', label='obs. isochrones')
             else:
                 plt.plot(self.distance, self.iso[i,:], color='w')
+        for i in range(self.nbhor):
+            if i==0:
+                plt.plot(self.distance, self.hor[i,:], color='0.5', label='obs. horizons')
+            elif i>0 and i<self.nbhor-self.nbdsz:
+                plt.plot(self.distance, self.hor[i,:], color='0.5')
+            elif i==self.nbhor-self.nbdsz:
+                plt.plot(self.distance, self.hor[i,:], color='r', label='obs. DSZ')
+            else:
+                plt.plot(self.distance, self.hor[i,:], color='r')
 #        levels=np.arange(0, 200000, 20000)
         levels_log=np.arange(2, 6, 0.1)
         levels=np.power(10, levels_log)
@@ -963,6 +979,15 @@ class RadarLine:
                 plt.plot(self.distance, self.iso[i,:], color='k', label='obs. isochrones')
             else:
                 plt.plot(self.distance, self.iso[i,:], color='k')
+        for i in range(self.nbhor):
+            if i==0:
+                plt.plot(self.distance, self.hor[i,:], color='0.5', label='obs. horizons')
+            elif i>0 and i<self.nbhor-self.nbdsz:
+                plt.plot(self.distance, self.hor[i,:], color='0.5')
+            elif i==self.nbhor-self.nbdsz:
+                plt.plot(self.distance, self.hor[i,:], color='r', label='obs. DSZ')
+            else:
+                plt.plot(self.distance, self.hor[i,:], color='r')
         plt.contourf(self.dist, self.depth, self.tau)
         if self.is_EDC:
             EDC_x=np.array([self.distance_EDC, self.distance_EDC])
