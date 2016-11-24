@@ -89,7 +89,7 @@ for  i,RLlabel in enumerate(list_RL_extra):
 
 
 #
-list_maps=['radar-lines','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','bottom-age','min-bottom-age','age-100m','age-150m','age-200m','age-250m','resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr','melting','melting-sigma', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma','accu-steady']
+list_maps=['Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','radar-lines','bottom-age','min-bottom-age','age-100m','age-150m','age-200m','age-250m','resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr','melting','melting-sigma', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma','accu-steady']
 list_length=len(list_maps)
 for i in range(17):
     list_maps.append('accu-layer'+ "%02i"%(i+1) +'_'+str(int(iso_age[i]/1000.))+'-'+str(int(iso_age[i+1]/1000.))+'kyr' )
@@ -99,7 +99,7 @@ for i,MapLabel in enumerate(list_maps):
 
     print MapLabel+' map'
 
-    fig=plt.figure(MapLabel,figsize=(21/2.54,21/2.54))
+    fig=plt.figure(MapLabel,figsize=(21/2.54,21/2.54)) 
     plt.title(MapLabel, y=1.05)
 #    map0 = Basemap(projection='spstere', lat_ts=-71, boundinglat=-59.996849, lon_0=180, rsphere=(6378137.00,6356752.3142))
     map0 = Basemap(projection='stere', lat_ts=-71, lat_0=-90, lon_0=180, llcrnrlon=lon1_bm2,llcrnrlat=lat1_bm2, urcrnrlon=lon2_bm2,urcrnrlat=lat2_bm2, rsphere=(6378137.00,6356752.3142))
@@ -188,11 +188,7 @@ for i,MapLabel in enumerate(list_maps):
 #    if MapLabel[:4]<>'':
 #        cs=map1.imshow(zz, extent=[-3333,3333,-3333,3333], alpha=0.25)
     levels=np.arange(-1000., 900., 100.)
-#    cs=map1.contourf(xx,yy,zz, levels, cmap='terrain', alpha=0.25, linestyle='')
-    print x1,y1
-    print map0.urcrnrx,map0.urcrnry
-    print map1.urcrnrx,map1.urcrnry
-    print min(x),max(x),min(y),max(y)
+
     plt.imshow(zz[::-1,:], extent=[max(x),min(x),max(y),min(y)], cmap='terrain', norm=Normalize(vmin=-1000, vmax=900), alpha=0.4)
 
 #    x1_bm2,y1_bm2=map1(lon1_bm2,lat1_bm2)
@@ -235,7 +231,7 @@ for i,MapLabel in enumerate(list_maps):
 #    plt.ylim=(y1,y2)
 
     ##Draw color bar
-    cb0=plt.colorbar(shrink=0.7)
+    cb0=plt.colorbar(orientation='horizontal', shrink=0.7, pad=0)
     cb0.set_label('Bedrock elevation (m)')
 
     #Draw continent's contour
@@ -545,7 +541,7 @@ for i,MapLabel in enumerate(list_maps):
         
 
     if MapLabel<>'radar-lines':
-        cb=plt.colorbar(orientation='horizontal', shrink=0.8)
+        cb=plt.colorbar(orientation='horizontal', shrink=0.7, pad=0.1)
         cb.set_label(cblabel)
         if levels<>'auto':
             cb.set_ticks(levels)
@@ -555,6 +551,8 @@ for i,MapLabel in enumerate(list_maps):
 
     xEDC,yEDC=map1(lonEDC,latEDC)
     map1.scatter(xEDC,yEDC, marker='*', c='r', edgecolor='r', s=64)
+
+    plt.tight_layout()
 
 #    pp=PdfPages(RLDir+MapLabel+'.pdf')
 #    pp.savefig(plt.figure(MapLabel))
