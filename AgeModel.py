@@ -85,7 +85,8 @@ def interp1d_stair_aver_withnan(x, y):   #TODO: deal with the case x not sorted
 
     return f
 
-def interp1d_lin_aver_withnan(x,y):
+      
+def interp1d_lin_aver_withoutnan(x,y):   #FIXME: there is a problem in this routine when the x are in decreasing order.
     """
     Interpolation of a linear by parts function using averaging.
     This function returns nan when there are all nans in one interpolation interval.
@@ -94,24 +95,29 @@ def interp1d_lin_aver_withnan(x,y):
         yp=np.empty(np.size(xp)-1)
         for i in range(np.size(xp)-1):
 #            print i, xp[i], xp[i+1]
-            if np.isnan(y[np.where((x>xp[i])*(x<xp[i+1]))]).all():
-                yp[i]=np.nan
-            else:
-                xmod=x[~(np.isnan(x)+np.isnan(y))]
-                ymod=y[~(np.isnan(x)+np.isnan(y))]
-                xmod2=xmod[np.where((xmod>xp[i])*(xmod<xp[i+1]))]
-                ymod2=ymod[np.where((xmod>xp[i])*(xmod<xp[i+1]))]
-                xmod3=np.concatenate((np.array([xp[i]]),xmod2,np.array([xp[i+1]])))
-                g=interp1d(x,y)
-                ymod3=np.concatenate((np.array([g(xp[i])]),ymod2,np.array([g(xp[i+1])])))
+            xmod=x[~(np.isnan(x)+np.isnan(y))]
+            ymod=y[~(np.isnan(x)+np.isnan(y))]
+            xmod2=xmod[np.where((xmod>xp[i])*(xmod<xp[i+1]))]
+            ymod2=ymod[np.where((xmod>xp[i])*(xmod<xp[i+1]))]
+            xmod3=np.concatenate((np.array([xp[i]]),xmod2,np.array([xp[i+1]])))
+            g=interp1d(xmod,ymod, bounds_error=False, fill_value=np.nan)
+            ymod3=np.concatenate((np.array([g(xp[i])]),ymod2,np.array([g(xp[i+1])])))
 #                print xmod3
 #                print ymod3
-                yp[i]=np.sum((ymod3[1:]+ymod3[:-1])/2*(xmod3[1:]-xmod3[:-1]))
-                yp[i]=yp[i]/(xp[i+1]-xp[i])
+            if np.isnan(ymod3).all():
+                yp[i]=np.nan
+            else:
+                xmod4=xmod3[np.where(~(np.isnan(ymod3)+np.isnan(xmod3)))]
+                ymod4=ymod3[np.where(~(np.isnan(ymod3)+np.isnan(xmod3)))]
+#                if i==9:
+#                    print xmod4,ymod4
+                yp[i]=np.sum((ymod4[1:]+ymod4[:-1])/2*(xmod4[1:]-xmod4[:-1]))
+                yp[i]=yp[i]/(xmod4[-1]-xmod4[0])
 #                print yp[i]
         return yp
     return f
-      
+
+
 def interp1d_lin_aver(x,y):   #FIXME: there is a problem in this routine when the x are in decreasing order.
     """
     Interpolation of a linear by parts function using averaging.
@@ -225,7 +231,7 @@ class RadarLine:
         if self.interp_method=='stair_aver':
             f=interp1d_stair_aver(self.distance_raw,self.thk_raw)    #TODO: the input function is not a staircase one
         elif self.interp_method=='lin_aver':
-            f=interp1d_lin_aver(self.distance_raw,self.thk_raw)    #TODO: the input function is not a staircase one
+            f=interp1d_lin_aver_withoutnan(self.distance_raw,self.thk_raw)    #TODO: the input function is not a staircase one
         else:
             print 'interpolation method not recognized'
             quit()
