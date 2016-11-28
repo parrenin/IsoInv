@@ -8,13 +8,9 @@ import matplotlib.pyplot as plt
 import gdal
 import sys
 
-run_model=False
-output_format="png"
+
 #write_data=True
-lat1=-75.5
-lon1=128.
-lat2=-74.8
-lon2=118.1
+
 #lat1=-75.5
 #lon1=124.
 #lat2=-75.
@@ -24,22 +20,13 @@ lat1_bm2=-48.458667
 lon2_bm2=45
 lat2_bm2=-48.458667
 ##
-lonEDC=123.+21./60.
-latEDC=-75.1
-dotsize=2.
-pad='15%'
-
-#
-
-list_RL=['ICP7_JKB2n_EDMC02a/','ICP7_JKB2n_F12T01b/','ICP7_JKB2n_F16T04a/','ICP7_JKB2n_F17T01a/','ICP7_JKB2n_RIDGE1a/','MCM_JKB1a_EDMC01a/','OIA_JKB2n_X39a/','OIA_JKB2n_X45a/','OIA_JKB2n_X48a/', 'OIA_JKB2n_X54a/','OIA_JKB2n_X57a/','OIA_JKB2n_X60a/','OIA_JKB2n_X63a/','OIA_JKB2n_X66a/','OIA_JKB2n_X69a/','OIA_JKB2n_X72a/','OIA_JKB2n_Y15a/','OIA_JKB2n_Y25a/','OIA_JKB2n_Y52a/','OIA_JKB2n_Y60a/', 'OIA_JKB2n_Y64a/','OIA_JKB2n_Y68a/','OIA_JKB2n_Y70b/','OIA_JKB2n_Y72a/','OIA_JKB2n_Y74a/','OIA_JKB2n_Y75a/','OIA_JKB2n_Y76a/','OIA_JKB2n_Y77a/','OIA_JKB2n_Y78a/','OIA_JKB2n_Y79a/','OIA_JKB2n_Y80a/', 'OIA_JKB2n_Y81a/','OIA_JKB2n_Y82a/','OIA_JKB2n_Y84a/','OIA_JKB2n_Y86a/','OIA_JKB2n_Y88a/','OIA_JKB2n_Y90a/','VCD_JKB2g_DVD01a/','WSB_JKB2h_R40b/']
-
-#'BAS'
-list_RL_extra=[]
 
 #Setting RadarLines directory
 RLDir=sys.argv[1]
 if RLDir[-1]!='/':
     RLDir=RLDir+'/'
+
+execfile(RLDir+'parameters-Maps.py')
 
 #Reading isochrones' ages
 readarray=np.loadtxt(RLDir+'ages.txt')
@@ -548,9 +535,9 @@ for i,MapLabel in enumerate(list_maps):
             cb.set_ticklabels(levels)
 
 
-
-    xEDC,yEDC=map1(lonEDC,latEDC)
-    map1.scatter(xEDC,yEDC, marker='*', c='r', edgecolor='r', s=64)
+    if is_drill:
+        xdrill,ydrill=map1(lon_drill,lat_drill)
+        map1.scatter(xdrill,ydrill, marker='*', c='r', edgecolor='r', s=64)
 
     plt.tight_layout()
 
