@@ -48,18 +48,21 @@ for i,RLlabel in enumerate(list_RL):
     m_array1=np.loadtxt(directory+'/m.txt')
     G0_array1=np.loadtxt(directory+'/G0.txt')
     pprime_array1=np.loadtxt(directory+'/pprime.txt')
+    hor_array1=np.loadtxt(directory+'/agehorizons.txt')
     if i==0:
         accu_array=accu_array1
         botage_array=botage_array1
         m_array=m_array1
         G0_array=G0_array1
         pprime_array=pprime_array1
+        hor_array=hor_array1
     else:
         accu_array=np.concatenate((accu_array,accu_array1))
         botage_array=np.concatenate((botage_array,botage_array1))
         m_array=np.concatenate((m_array,m_array1))
         G0_array=np.concatenate((G0_array,G0_array1))
         pprime_array=np.concatenate((pprime_array,pprime_array1))
+        hor_array=np.concatenate((hor_array,hor_array1))
 
 #Reading data for extra radar lines
 for  i,RLlabel in enumerate(list_RL_extra):
@@ -78,9 +81,10 @@ for  i,RLlabel in enumerate(list_RL_extra):
 #
 list_maps=['Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','radar-lines','bottom-age','min-bottom-age','age-100m','age-150m','age-200m','age-250m','resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr','melting','melting-sigma', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma','accu-steady']
 list_length=len(list_maps)
-for i in range(17):
+for i in range(nbiso):
     list_maps.append('accu-layer'+ "%02i"%(i+1) +'_'+str(int(iso_age[i]/1000.))+'-'+str(int(iso_age[i+1]/1000.))+'kyr' )
-
+for i in range(nbhor):
+    list_maps.append('age-hor'+"%02i"%(i+1))
 
 for i,MapLabel in enumerate(list_maps):
 
@@ -504,7 +508,7 @@ for i,MapLabel in enumerate(list_maps):
         cblabel='$\sigma$ pprime'
         
 
-    elif i>=list_length-2:
+    elif i>=list_length-2 and i<list_length+nbiso:
 
         LON=accu_array[:,0]
         LAT=accu_array[:,1]
@@ -526,6 +530,16 @@ for i,MapLabel in enumerate(list_maps):
         map1.scatter(x,y, c=accu*1000*0.917, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
         cblabel='accu (mm-we/yr)'
         
+    elif i>=list_length+nbiso
+        LON=hor_array[:,0]
+        LAT=hor_array[:,1]
+        x,y=map1(LON,LAT)
+
+        age=hor_array[:,3]
+
+        map1.scatter(x,y, c=age/1000., marker='o', lw=0., edgecolor='', s=dotsize)
+        cblabel='age (kyr B1950)'
+
 
     if MapLabel<>'radar-lines':
         cb=plt.colorbar(orientation='horizontal', shrink=0.7, pad=0.1)
