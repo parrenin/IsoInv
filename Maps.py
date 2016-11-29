@@ -535,7 +535,7 @@ for i,MapLabel in enumerate(list_maps):
         LAT=hor_array[:,1]
         x,y=map1(LON,LAT)
 
-        age=hor_array[:,3]
+        age=hor_array[:,i-(list_length+nbiso)+3]
 
         map1.scatter(x,y, c=age/1000., marker='o', lw=0., edgecolor='', s=dotsize)
         cblabel='age (kyr B1950)'
