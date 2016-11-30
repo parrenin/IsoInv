@@ -13,6 +13,8 @@ lon2=118.1
 lonEDC=123.+21./60.
 latEDC=-75.1
 
+output_format="png"
+
 RLDir=sys.argv[1]
 if RLDir[-1]!='/':
     RLDir=RLDir+'/'
@@ -88,4 +90,4 @@ ysquare=np.array([y1,y2,y2,y1,y1])
 m.plot(xsquare,ysquare, linestyle='solid', color='k')
 
 
-plt.savefig(RLDir+'Bedmap2.pdf', format='pdf', bbox_inches='tight')
+plt.savefig(RLDir+'Bedmap2.'+output_format, format=output_format, bbox_inches='tight')

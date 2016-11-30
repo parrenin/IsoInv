@@ -530,7 +530,7 @@ for i,MapLabel in enumerate(list_maps):
         map1.scatter(x,y, c=accu*1000*0.917, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
         cblabel='accu (mm-we/yr)'
         
-    elif i>=list_length+nbiso
+    elif i>=list_length+nbiso:
         LON=hor_array[:,0]
         LAT=hor_array[:,1]
         x,y=map1(LON,LAT)
