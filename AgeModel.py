@@ -1341,10 +1341,12 @@ elif RL.opt_method=='MH1D':
         G0_accepted=np.array([RL.G0[j]])
         melt_accepted=np.array([RL.m[j]])
         pprime_accepted=np.array([RL.pprime[j]])
+        age_accepted=np.transpose(np.array([RL.age[:,j]]))
         accu=RL.a[j]
         G0=RL.G0[j]
         melt=RL.m[j]
         pprime=RL.pprime[j]
+        age=np.transpose(np.array([RL.age[:,j]]))
         for iter in range(RL.MHnbiter):
 #            print 'iteration no:',i
             RL.variables1Dtest=np.random.normal(RL.variables1D,np.sqrt(np.diag(RL.hess1D)))
@@ -1357,17 +1359,20 @@ elif RL.opt_method=='MH1D':
                 G0=RL.G0[j]
                 melt=RL.m[j]
                 pprime=RL.pprime[j]
+                age=np.transpose(np.array([RL.age[:,j]]))
             agebot_accepted=np.append(agebot_accepted,agebot)
             accu_accepted=np.append(accu_accepted,accu)
             G0_accepted=np.append(G0_accepted,G0)
             melt_accepted=np.append(melt_accepted,melt)
             pprime_accepted=np.append(pprime_accepted,pprime)
+            age_accepted=np.hstack((age_accepted,age))
 #            print RL.variables1D
         RL.agebotmin[j]=np.percentile(agebot_accepted,15)
         RL.sigma_a[j]=np.std(accu_accepted)
         RL.sigma_G0[j]=np.std(G0_accepted)
         RL.sigma_m[j]=np.std(melt_accepted)
         RL.sigma_pprime[j]=np.std(pprime_accepted)
+        RL.sigma_age[:,j]=np.std(age_accepted, axis=1)
         print 'min age at 85%',RL.agebotmin[j]
         RL.variables1D,RL.hess1D,infodict,mesg,ier=leastsq(RL.residuals1D, RL.variables1D, args=(j), full_output=1)
         RL.residuals1D(RL.variables1D,j)

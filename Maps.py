@@ -79,7 +79,7 @@ for  i,RLlabel in enumerate(list_RL_extra):
 
 
 #
-list_maps=['Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','radar-lines','bottom-age','min-bottom-age','age-100m','age-150m','age-200m','age-250m','resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr','melting','melting-sigma', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma','accu-steady']
+list_maps=['melting','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','radar-lines','bottom-age','min-bottom-age','age-100m','age-150m','age-200m','age-250m','resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma','accu-steady']
 list_length=len(list_maps)
 for i in range(nbiso):
     list_maps.append('accu-layer'+ "%02i"%(i+1) +'_'+str(int(iso_age[i]/1000.))+'-'+str(int(iso_age[i+1]/1000.))+'kyr' )
@@ -433,7 +433,9 @@ for i,MapLabel in enumerate(list_maps):
         melting=m_array[:,3]
         x,y=map1(LON,LAT)
 
-        map1.scatter(x,y, c=melting*1e3, marker='o', lw=0., edgecolor='', s=dotsize)
+        norm = Normalize(vmin=0.,vmax=5.)
+
+        map1.scatter(x,y, c=melting*1e3, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
         cblabel='Melting (mm/yr)'
         
 
@@ -449,7 +451,10 @@ for i,MapLabel in enumerate(list_maps):
         sigma_melting=m_array[:,4]
         x,y=map1(LON,LAT)
 
-        map1.scatter(x,y, c=sigma_melting*1e3, marker='o', lw=0., edgecolor='', s=dotsize)
+        norm = Normalize(vmin=0.,vmax=1.)
+
+
+        map1.scatter(x,y, c=sigma_melting*1e3, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
         cblabel='$\sigma$ Melting (mm/yr)'
         
 
@@ -516,7 +521,7 @@ for i,MapLabel in enumerate(list_maps):
         norm = Normalize(vmin=10.,vmax=30.)
         if MapLabel=='accu-sigma':
             accu=accu_array[:,4]
-            norm = Normalize(vmin=0.,vmax=2.)
+            norm = Normalize(vmin=0.,vmax=1.)
         elif MapLabel=='accu-steady':
             accu=accu_array[:,3]
 #            output=np.transpose(np.vstack((LON,LAT,accu*100)))
