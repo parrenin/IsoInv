@@ -79,7 +79,7 @@ for  i,RLlabel in enumerate(list_RL_extra):
 
 
 #
-list_maps=['melting','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','radar-lines','bottom-age','min-bottom-age','age-100m','age-150m','age-200m','age-250m','resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma','accu-steady']
+list_maps=['radar-lines','melting','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','bottom-age','min-bottom-age','age-100m','age-150m','age-200m','age-250m','resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma','accu-steady']
 list_length=len(list_maps)
 for i in range(nbiso):
     list_maps.append('accu-layer'+ "%02i"%(i+1) +'_'+str(int(iso_age[i]/1000.))+'-'+str(int(iso_age[i+1]/1000.))+'kyr' )
@@ -207,19 +207,19 @@ for i,MapLabel in enumerate(list_maps):
 
     ##Draw OIA refined bedrock
     img = Image.open(RLDir+'bedmap2/Bed_BlobA.tiff')
-    arr = np.asarray(img)
-    arr=np.where(arr==-9999,np.nan,arr)
+#    arr = np.asarray(img)
+#    arr=np.where(arr==-9999,np.nan,arr)
     hmin=1298450.
     hmax=1391550.
     vmin=-840950.
     vmax=-888950.
-#    lonmin,latmin=map0(hmin,vmin, inverse=True)
-#    lonmax,latmax=map0(hmax,vmax, inverse=True)
-#    hmin,vmin=map1(lonmin,latmin)
-#    hmax,vmax=map1(lonmax,latmax)
-#    plt.imshow(arr, origin='upper', cmap='terrain', extent=[ hmin, hmax, vmin, vmax])
-#    plt.xlim=(x1,x2)
-#    plt.ylim=(y1,y2)
+    lonmin,latmin=map0(hmin,vmin, inverse=True)
+    lonmax,latmax=map0(hmax,vmax, inverse=True)
+    hmin,vmin=map1(lonmin,latmin)
+    hmax,vmax=map1(lonmax,latmax)
+    plt.imshow(img, origin='upper', cmap='terrain', extent=[hmin, hmax, vmin, vmax])
+    plt.xlim=(x1,x2)
+    plt.ylim=(y1,y2)
 
     ##Draw color bar
     cb0=plt.colorbar(orientation='horizontal', shrink=0.7, pad=0)

@@ -22,8 +22,8 @@ if RLDir[-1]!='/':
 #m = Basemap(projection='stere', lat_ts=-71, lat_0=-90, lon_0=0.,llcrnrlon=-135,llcrnrlat=-48.458667, urcrnrlon=45,urcrnrlat=-48.458667, rsphere=(6378137.00,6356752.3142))
 m = Basemap(projection='stere', lat_ts=-71, lat_0=-90, lon_0=180, llcrnrlon=-135,llcrnrlat=-48.458667, urcrnrlon=45,urcrnrlat=-48.458667, rsphere=(6378137.00,6356752.3142))
 #m = Basemap(projection='spstere', boundinglat=-60, lon_0=180)
-#m.drawcoastlines()
-#m.fillcontinents(color='white',lake_color='aqua')
+m.drawcoastlines()
+m.fillcontinents(color='white',lake_color='aqua')
 #m.drawmapboundary(fill_color='aqua')
 
 m.drawparallels(np.arange(-90.,81.,5.), dashes=[1, 2], color='0.5', linewidths=0.5)
@@ -35,26 +35,19 @@ m.drawmeridians(np.arange(-180.,181.,10.), latmax=85., dashes=[1, 2], color='0.5
 ##I=np.where(I==-9999,np.nan,I)
 #m.imshow(I)
 
-img = Image.open(RLDir+'bedmap2/bedmap2_bed_shade.tif')
-arr = np.asarray(img)
-arr=np.where(arr==-9999,np.nan,arr)
-m.imshow(arr, cmap='Greys', origin='upper', vmin=180., vmax=220.)
+#img = Image.open(RLDir+'bedmap2/bedmap2_bed_shade.tif')
+#arr = np.asarray(img)
+#arr=np.where(arr==-9999,np.nan,arr)
+#m.imshow(arr, cmap='Greys', origin='upper', vmin=180., vmax=220.)
 
 #Draw bed topography
-raster = gdal.Open(RLDir+'bedmap2/bedmap2_bed.txt')
-band = raster.GetRasterBand(1)
-array = band.ReadAsArray()
-array=np.where(array==-9999,np.nan,array)
-#array=array[::-1,:]
-
-norm = Normalize(vmin=-3000.,vmax=3000.)
-#from matplotlib.colors import LightSource
-#ls = LightSource(azdeg = 90, altdeg = 20)
-#rgb = ls.shade(array, cm.GMT_haxby)
-#im = m.imshow(rgb, norm=norm)
-
-m.imshow(array, cmap='terrain', norm=norm, alpha=0.5, origin='upper')
-m.colorbar()
+#raster = gdal.Open(RLDir+'bedmap2/bedmap2_bed.txt')
+#band = raster.GetRasterBand(1)
+#array = band.ReadAsArray()
+#array=np.where(array==-9999,np.nan,array)
+#norm = Normalize(vmin=-3000.,vmax=3000.)
+#m.imshow(array, cmap='terrain', norm=norm, alpha=0.5, origin='upper')
+#m.colorbar()
 
 
 #Draw surface contours
@@ -87,7 +80,7 @@ x1,y1=m(lon1,lat1)
 x2,y2=m(lon2,lat2)
 xsquare=np.array([x1,x1,x2,x2,x1])
 ysquare=np.array([y1,y2,y2,y1,y1])
-m.plot(xsquare,ysquare, linestyle='solid', color='k')
+m.plot(xsquare,ysquare, linestyle='solid', color='r')
 
 
 plt.savefig(RLDir+'Bedmap2.'+output_format, format=output_format, bbox_inches='tight')
