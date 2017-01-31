@@ -3,6 +3,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.colors import LogNorm
 from matplotlib.colors import Normalize
 from PIL import Image
+from osgeo import gdalconst
 import numpy as np
 import matplotlib.pyplot as plt
 import gdal
@@ -206,20 +207,45 @@ for i,MapLabel in enumerate(list_maps):
 #        plt.clabel(cs, inline=1, fontsize=10,fmt='%1.0f')
 
     ##Draw OIA refined bedrock
-    img = Image.open(RLDir+'bedmap2/Bed_BlobA.tiff')
+#    img = Image.open(RLDir+'bedmap2/Bed_BlobA.tiff')
 #    arr = np.asarray(img)
 #    arr=np.where(arr==-9999,np.nan,arr)
-    hmin=1298450.
-    hmax=1391550.
-    vmin=-840950.
-    vmax=-888950.
-    lonmin,latmin=map0(hmin,vmin, inverse=True)
-    lonmax,latmax=map0(hmax,vmax, inverse=True)
+    def readRasterBandAsArray(filename, bandnum):
+        raster = gdal.Open(filename, gdalconst.GA_ReadOnly)
+        rasterBand = raster.GetRasterBand(bandnum)
+        rasterBandArray = rasterBand.ReadAsArray(0, 0, raster.RasterXSize, raster.RasterYSize).astype(np.float)
+         
+        rasterBandNoDataValue = rasterBand.GetNoDataValue()
+        if rasterBandNoDataValue is not None:
+            rasterBandArray[rasterBandArray == rasterBandNoDataValue] = np.nan
+                             
+        return rasterBandArray
+ 
+    rasterBandArray=readRasterBandAsArray(RLDir+'bedmap2/Bed_BlobA_Geoid4.tif',1)
+
+#    hmin=1298450.
+#    hmax=1391550.
+#    vmin=-840950.
+#    vmax=-888950.
+#    lonmin,latmin=map0(hmin,vmin, inverse=True)
+#    lonmax,latmax=map0(hmax,vmax, inverse=True)
+#    hmin,vmin=map1(lonmin,latmin)
+#    hmax,vmax=map1(lonmax,latmax)
+#    extent=[hmin,hmax,vmin,vmax]
+    latmax=-75.1164861
+    latmin=-75.5905194
+    lonmax=121.1456639
+    lonmin=124.3964778
     hmin,vmin=map1(lonmin,latmin)
     hmax,vmax=map1(lonmax,latmax)
-    plt.imshow(img, origin='upper', cmap='terrain', extent=[hmin, hmax, vmin, vmax])
-    plt.xlim=(x1,x2)
-    plt.ylim=(y1,y2)
+    extent=(hmin, hmax, vmin, vmax)
+    plt.imshow(2000*np.ones(np.shape(rasterBandArray)), cmap='terrain', extent=extent, norm=Normalize(vmin=-1000, vmax=900))
+    plt.imshow(rasterBandArray, origin='upper', cmap='terrain', extent=extent, norm=Normalize(vmin=-1000, vmax=900), alpha=0.4)
+    xborders=np.array([hmin,hmax,hmax,hmin,hmin])
+    yborders=np.array([vmin,vmin,vmax,vmax,vmin])
+    plt.plot(xborders,yborders,color='k')
+#    plt.xlim=(x1,x2)
+#    plt.ylim=(y1,y2)
 
     ##Draw color bar
     cb0=plt.colorbar(orientation='horizontal', shrink=0.7, pad=0)

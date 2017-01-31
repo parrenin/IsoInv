@@ -50,6 +50,7 @@ m.drawmeridians(np.arange(-180.,181.,10.), latmax=85., dashes=[1, 2], color='0.5
 #m.colorbar()
 
 
+
 #Draw surface contours
 raster2 = gdal.Open(RLDir+'bedmap2/bedmap2_surface.txt')
 band2 = raster2.GetRasterBand(1)
@@ -68,6 +69,19 @@ raster3 = gdal.Open(RLDir+'bedmap2/bedmap2_icemask_grounded_and_shelves.txt')
 band3 = raster3.GetRasterBand(1)
 array3 = band3.ReadAsArray()
 #array3=np.where(array3==-9999,np.nan,array3)
+
+#Draw bed on Blob A
+#img = Image.open(RLDir+'bedmap2/Bed_BlobA.tiff')
+#arr = np.asarray(img)
+##arr=np.where(arr==-9999,np.nan,arr)
+#hmin=1298450.
+#hmax=1391550.
+#vmin=-840950.
+#vmax=-888950.
+#norm = Normalize(vmin=-3000.,vmax=3000.)
+#m.imshow(arr, origin='upper', cmap='terrain', extent=[hmax, hmin, vmax, vmin], norm=norm)
+##plt.xlim=(x1,x2)
+##plt.ylim=(y1,y2)
 
 x = np.linspace(0, m.urcrnrx, array3.shape[1])
 y = np.linspace(0, m.urcrnry, array3.shape[0])
