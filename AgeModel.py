@@ -240,6 +240,7 @@ class RadarLine:
         self.iso=np.zeros((self.nbiso,np.size(self.distance)))
         self.hor=np.zeros((self.nbhor,np.size(self.distance)))
         self.iso_modage=np.empty_like(self.iso)
+        self.iso_modage_sigma=np.empty_like(self.iso)
         self.hor_modage=np.empty_like(self.hor)
         self.iso_EDC=np.zeros(self.nbiso)
 
@@ -502,6 +503,7 @@ class RadarLine:
         self.age200m[j]=f(max(self.depth[:,j])-200)
         self.age250m[j]=f(max(self.depth[:,j])-250)
         self.hor_modage[:,j]=f(self.hor[:,j])
+        self.iso_modage[:,j]=f(self.iso[:,j])
         h1=interp1d(self.age[:-1,j],self.age_density[:,j])
         h2=interp1d(self.age[:,j],self.depth[:,j])
         if self.agebot[j]>=1000000:
@@ -571,7 +573,6 @@ class RadarLine:
         self.model1D(j)
         f=interp1d(self.depth[:,j],self.age[:,j])
 #        print self.age[:,j]
-        self.iso_modage[:,j]=f(self.iso[:,j])
 #        print self.iso_modage[:,j]
 #        print 'shape iso_age and iso_sigma:', np.shape(self.iso_age),np.shape(self.iso_sigma)
         resi=(self.iso_age.flatten()-self.iso_modage[:,j])/self.iso_sigma.flatten()
@@ -699,6 +700,7 @@ class RadarLine:
 
         f=interp1d(self.depth[:,j],self.sigma_age[:,j])
         self.sigmabotage[j]=f(self.thk[j]-60.)
+        self.iso_modage_sigma[:,j]=f(self.iso[:,j])
 
         return
 
@@ -792,9 +794,9 @@ class RadarLine:
                 plt.plot(self.distance, self.hor[i,:], color='r', label='obs. DSZ')
             else:
                 plt.plot(self.distance, self.hor[i,:], color='r')
-        levels=np.arange(0, 1600000, 100000)
-        levels_color=np.arange(0, 1500000, 10000)
-        plt.contourf(self.dist, self.depth, self.agesteady, levels_color)
+        levels=np.arange(0, 1600, 100)
+        levels_color=np.arange(0, 1500, 10)
+        plt.contourf(self.dist, self.depth, self.agesteady/1000., levels_color)
         if self.is_EDC:
             EDC_x=np.array([self.distance_EDC, self.distance_EDC])
             EDC_y=np.array([0., 3200.])
@@ -808,7 +810,7 @@ class RadarLine:
         cb=plt.colorbar()
         cb.set_ticks(levels)
         cb.set_ticklabels(levels)
-        cb.set_label('Modeled steady age')
+        cb.set_label('Modeled steady age (kyr)')
         x1,x2,y1,y2 = plt.axis()
         if self.max_depth=='auto':
             self.max_depth=y2
@@ -837,9 +839,9 @@ class RadarLine:
                 plt.plot(self.distance, self.hor[i,:], color='r', label='obs. DSZ')
             else:
                 plt.plot(self.distance, self.hor[i,:], color='r')
-        levels=np.arange(0, 1600000, 100000)
-        levels_color=np.arange(0, 1500000, 10000)
-        plt.contourf(self.dist, self.depth, self.age, levels_color)
+        levels=np.arange(0, 1600, 100)
+        levels_color=np.arange(0, 1500, 10)
+        plt.contourf(self.dist, self.depth, self.age/1000., levels_color)
         if self.is_EDC:
             EDC_x=np.array([self.distance_EDC, self.distance_EDC])
             EDC_y=np.array([0., 3200.])
@@ -859,7 +861,7 @@ class RadarLine:
         cb=plt.colorbar()
         cb.set_ticks(levels)
         cb.set_ticklabels(levels)
-        cb.set_label('Modeled age (yr)')
+        cb.set_label('Modeled age (kyr)')
         x1,x2,y1,y2 = plt.axis()
         plt.axis((min(self.distance),max(self.distance),self.max_depth,0))
         if self.reverse_distance:
@@ -1180,7 +1182,7 @@ class RadarLine:
     def bot_age_save(self):
         output=np.vstack((self.LON,self.LAT,self.distance,self.thk,self.agebot,self.agebotmin,self.age100m,self.age150m,self.age200m,self.age250m,self.age_density1Myr,self.age_density1dot2Myr,self.age_density1dot5Myr, self.height0dot6Myr,self.height0dot8Myr,self.height1Myr,self.height1dot2Myr,self.height1dot5Myr))
         with open(self.label+'agebottom.txt','w') as f:
-            f.write('#LON\tLAT\tthickness(m)\tdistance(km)\tage60m(yr-b1950)\tage-min(yr-b1950)\tage100m\tage150m\tage200m\tage250\tage_density1Myr\tage_density1.2Myr\tage_density1.5Myr\theight0.6Myr\theight0.8Myr\theight1Myr\theight1.2Myr\theight1.5Myr\n')
+            f.write('#LON\tLAT\tdistance(km)\tthickness(m)\tage60m(yr-b1950)\tage-min(yr-b1950)\tage100m\tage150m\tage200m\tage250\tage_density1Myr\tage_density1.2Myr\tage_density1.5Myr\theight0.6Myr\theight0.8Myr\theight1Myr\theight1.2Myr\theight1.5Myr\n')
             np.savetxt(f,np.transpose(output), delimiter="\t") 
 
     def hor_age_save(self):
@@ -1194,6 +1196,21 @@ class RadarLine:
             np.savetxt(f,np.transpose(output), delimiter="\t") 
         for i in range(self.nbhor):
             print 'horizon no:',i+1,', average age: ',np.nanmean(self.hor_modage[i,:]),', stdev age: ',np.nanstd(self.hor_modage[i,:])
+
+    def iso_age_save(self):
+        output=np.vstack((self.LON, self.LAT, self.distance, self.iso_modage, self.iso_modage_sigma))
+        header='#LON\tLAT\tdistance(km)'
+        for i in range(self.nbiso):
+            header=header+'\tiso_no_'+str(i+1)
+        for i in range(self.nbiso):
+            header=header+'\tiso_no_'+str(i+1)
+        header=header+'\n'
+        with open(self.label+'ageisochrones.txt','w') as f:
+            f.write(header)
+            np.savetxt(f,np.transpose(output), delimiter="\t") 
+        for i in range(self.nbiso):
+            print 'isochrone no:',i+1,', average age: ',np.nanmean(self.iso_modage[i,:]),', stdev age: ',np.nanstd(self.iso_modage[i,:])
+
 
     def twtt_save(self):
 #        b=np.chararray((np.size(self.distance)), itemsize=20)
@@ -1400,5 +1417,6 @@ if RL.is_EDC:
 #RL.max_age()
 RL.bot_age_save()
 RL.hor_age_save()
+RL.iso_age_save()
 RL.twtt_save()
 print 'Program execution time: ', time.time() - start_time, 'seconds' 
