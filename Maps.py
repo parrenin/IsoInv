@@ -65,6 +65,14 @@ for i,RLlabel in enumerate(list_RL):
         pprime_array=np.concatenate((pprime_array,pprime_array1))
         hor_array=np.concatenate((hor_array,hor_array1))
 
+for i,RLlabel in enumerate(list_RL_highlight):
+    directory=RLDir+RLlabel
+    botage_array1=np.loadtxt(directory+'/agebottom.txt')
+    if i==0:
+        botage_array_highlight=botage_array1
+    else:
+        botage_array_highlight=np.concatenate((botage_array,botage_array1))
+
 #Reading data for extra radar lines
 for  i,RLlabel in enumerate(list_RL_extra):
     directory=RLDir+RLlabel
@@ -271,6 +279,13 @@ for i,MapLabel in enumerate(list_maps):
         x,y=map1(LON,LAT)
 
         map1.scatter(x,y, c='b', marker='o', lw=0., edgecolor='', s=dotsize)
+
+        LON=botage_array_highlight[:,0]
+        LAT=botage_array_highlight[:,1]
+        x,y=map1(LON,LAT)
+
+        map1.scatter(x,y, c='r', marker='o', lw=0., edgecolor='', s=dotsize)
+
 
         ax2 = plt.axes()
 #        ax2.text(0.485,0.38,'A', color='red', fontweight='bold', transform=ax2.transAxes)
