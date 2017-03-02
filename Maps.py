@@ -88,7 +88,7 @@ for  i,RLlabel in enumerate(list_RL_extra):
 
 
 #
-list_maps=['radar-lines','melting','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','bottom-age','min-bottom-age','age-100m','age-150m','age-200m','age-250m','resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma','accu-steady']
+list_maps=['radar-lines','melting','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','bottom-age','min-bottom-age','age-100m','age-150m','age-200m','age-250m', 'resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma','accu-steady']
 list_length=len(list_maps)
 for i in range(nbiso):
     list_maps.append('accu-layer'+ "%02i"%(i+1) +'_'+str(int(iso_age[i]/1000.))+'-'+str(int(iso_age[i+1]/1000.))+'kyr' )
@@ -403,10 +403,10 @@ for i,MapLabel in enumerate(list_maps):
         resolution=botage_array[:,10]
         x,y=map1(LON,LAT)
 
-        norm = LogNorm(vmin=1.,vmax=20.)
-        map1.scatter(x,y, c=resolution/1e3, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
-        cblabel='Resolution at 1Myr (kyr/m)'
-        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
+        norm = Normalize()
+        map1.scatter(x,y, c=1/resolution*1e5, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
+        cblabel='Resolution at 1Myr (cm/kyr)'
+#        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
 
 #        output=np.transpose(np.vstack((LON,LAT,resolution/1e3)))
 #        with open(RLDir+'resolution1Myr.txt','w') as f:
@@ -420,9 +420,10 @@ for i,MapLabel in enumerate(list_maps):
         resolution=botage_array[:,11]
         x,y=map1(LON,LAT)
 
-        map1.scatter(x,y, c=resolution/1e3, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
-        cblabel='Resolution at 1.2Myr (kyr/m)'
-        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
+        norm = Normalize()
+        map1.scatter(x,y, c=1/resolution*1e5, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
+        cblabel='Resolution at 1.2Myr (cm/kyr)'
+#        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
 
 #        output=np.transpose(np.vstack((LON,LAT,resolution/1e3)))
 #        with open(RLDir+'resolution1.2Myr.txt','w') as f:
@@ -436,9 +437,10 @@ for i,MapLabel in enumerate(list_maps):
         resolution=botage_array[:,12]
         x,y=map1(LON,LAT)
 
-        map1.scatter(x,y, c=resolution/1e3, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
-        cblabel='Resolution at 1.5Myr (kyr/m)'
-        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
+        norm = Normalize(vmin=2., vmax=15.)
+        map1.scatter(x,y, c=1/resolution*1e5, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
+        cblabel='Resolution at 1.5Myr (cm/kyr)'
+#        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
 
 #        output=np.transpose(np.vstack((LON,LAT,resolution/1e3)))
 #        with open(RLDir+'resolution1.5Myr.txt','w') as f:
@@ -581,36 +583,41 @@ for i,MapLabel in enumerate(list_maps):
         cblabel='$\sigma$ pprime'
         
 
-    elif i>=list_length-2 and i<list_length+nbiso:
+    elif MapLabel[0:4]=='accu':
 
         LON=accu_array[:,0]
         LAT=accu_array[:,1]
         x,y=map1(LON,LAT)
         norm = Normalize(vmin=10.,vmax=30.)
-        if MapLabel=='accu-sigma':
+        if MapLabel=='accu-steady':
+            accu=accu_array[:,3]
+        elif MapLabel=='accu-sigma':
             accu=accu_array[:,4]
             norm = Normalize(vmin=0.,vmax=1.)
-        elif MapLabel=='accu-steady':
-            accu=accu_array[:,3]
 #            output=np.transpose(np.vstack((LON,LAT,accu*100)))
 #            with open(RLDir+'a.txt','w') as f:
 #                f.write('#LON\tLAT\taccu (cm/yr)\n')
 #                np.savetxt(f,output, delimiter="\t")
 
         else:
-            accu=accu_array[:,i-list_length+5]
+            accu=accu_array[:,int(MapLabel[10:12])+4]
 
         map1.scatter(x,y, c=accu*1000*0.917, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
         cblabel='accu (mm-we/yr)'
         
-    elif i>=list_length+nbiso:
+    elif MapLabel[0:7]=='age-hor':
         LON=hor_array[:,0]
         LAT=hor_array[:,1]
         x,y=map1(LON,LAT)
 
-        age=hor_array[:,i-(list_length+nbiso)+3]
+        age=hor_array[:,int(MapLabel[7:9])+2]
 
-        map1.scatter(x,y, c=age/1000., marker='o', lw=0., edgecolor='', s=dotsize)
+        if np.all(np.isnan(age)):
+            norm=Normalize(vmin=0.,vmax=1.)
+        else:
+            norm=Normalize(vmin=np.nanmin(age/1000.),vmax=np.nanmax(age/1000.))
+
+        map1.scatter(x,y, c=age/1000., marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
         cblabel='age (kyr B1950)'
 
 
