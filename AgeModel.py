@@ -1,5 +1,4 @@
-#TODO: compare with age and temperature profiles from the EDC ice core.
-#TODO: add a sigma on G0 of 5 mW/m^2
+#TODO: save real accu per layer and not steady accu
 
 import time
 import sys
