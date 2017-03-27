@@ -88,19 +88,19 @@ for  i,RLlabel in enumerate(list_RL_extra):
     pprime_array=np.concatenate((pprime_array,pprime_array1))
 
 #Reading AICC2012 file
-readarray=np.loadtxt(RLDir+'/AICC2012.txt')
-AICC2012_depth=readarray[:,0]
-AICC2012_iedepth=readarray[:,1]
-AICC2012_accu=readarray[:,2]
-AICC2012_age=readarray[:,3]
-AICC2012_sigma=readarray[:,4]
+#readarray=np.loadtxt(RLDir+'/AICC2012.txt')
+#AICC2012_depth=readarray[:,0]
+#AICC2012_iedepth=readarray[:,1]
+#AICC2012_accu=readarray[:,2]
+#AICC2012_age=readarray[:,3]
+#AICC2012_sigma=readarray[:,4]
 
-AICC2012_averageaccu=np.sum((AICC2012_age[1:]-AICC2012_age[:-1])*AICC2012_accu[:-1])/(AICC2012_age[-1]-AICC2012_age[0])
-AICC2012_steadyage=np.cumsum(np.concatenate((np.array([AICC2012_age[0]]),(AICC2012_age[1:]-AICC2012_age[:-1])*AICC2012_accu[:-1]/AICC2012_averageaccu)))
+#AICC2012_averageaccu=np.sum((AICC2012_age[1:]-AICC2012_age[:-1])*AICC2012_accu[:-1])/(AICC2012_age[-1]-AICC2012_age[0])
+#AICC2012_steadyage=np.cumsum(np.concatenate((np.array([AICC2012_age[0]]),(AICC2012_age[1:]-AICC2012_age[:-1])*AICC2012_accu[:-1]/AICC2012_averageaccu)))
 
 
-#'radar-lines','melting','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','bottom-age','min-bottom-age','age-100m','age-150m','age-200m','age-250m', 'resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma',
-list_maps=['accu-steady']
+#
+list_maps=['radar-lines','melting','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','bottom-age','min-bottom-age','age-100m','age-150m','age-200m','age-250m', 'resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma','accu-steady']
 list_length=len(list_maps)
 for i in range(nbiso):
     list_maps.append('accu-layer'+ "%02i"%(i+1) +'_'+str(int(iso_age[i]/1000.))+'-'+str(int(iso_age[i+1]/1000.))+'kyr' )
@@ -615,8 +615,8 @@ for i,MapLabel in enumerate(list_maps):
             norm=Normalize()
             i=int(MapLabel[10:12])
             accu=accu_array[:,i+4]
-            f=interp1d(AICC2012_age,AICC2012_steadyage)
-            accu=accu*(f(iso_age[i])-f(iso_age[i-1]))/(iso_age[i]-iso_age[i-1])
+#            f=interp1d(AICC2012_age,AICC2012_steadyage)
+#            accu=accu*(f(iso_age[i])-f(iso_age[i-1]))/(iso_age[i]-iso_age[i-1])
 
         map1.scatter(x,y, c=accu*1000*0.917, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
         cblabel='accu (mm-we/yr)'

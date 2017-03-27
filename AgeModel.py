@@ -664,11 +664,14 @@ class RadarLine:
 
     def accu_layers(self):
         self.accusteady_layer=np.zeros((self.nbiso,np.size(self.distance)))
+        self.accu_layer=np.zeros((self.nbiso,np.size(self.distance)))
         for j in range(np.size(self.distance)):
             f=interp1d(self.depth[:,j],self.age[:,j])
             self.iso_modage[:,j]=f(self.iso[:,j])
             self.accusteady_layer[0,j]=self.a[j]*(self.iso_modage[0,j]-self.age_surf)/(self.iso_age[0]-self.age_surf)
             self.accusteady_layer[1:,j]=self.a[j]*(self.iso_modage[1:,j]-self.iso_modage[:-1,j])/(self.iso_age[1:]-self.iso_age[:-1]).flatten()
+        self.accu_layer[0,]=self.accusteady_layer[0,:]*(self.iso_steadyage[0]-self.age_surf)/(self.iso_age[0]-self.age_surf)
+        self.accu_layer[1:,]=self.accusteady_layer[1:,]*(self.iso_steadyage[1:]-self.iso_steadyage[:-1])/(self.iso_age[1:]-self.iso_age[:-1])
 
         return
 
@@ -1038,7 +1041,7 @@ class RadarLine:
 
 
 #        fig = plt.figure('Accumulation history')
-        lines=[zip(self.distance, self.accusteady_layer[i,:]) for i in range(self.nbiso)]
+        lines=[zip(self.distance, 917*self.accu_layer[i,:]) for i in range(self.nbiso)]
         z=(self.iso_age.flatten()[1:]+self.iso_age.flatten()[:-1])/2
         z=np.concatenate(( np.array([(self.age_surf+self.iso_age.flatten()[0])/2]) , z ))
         fig, ax = plt.subplots()
@@ -1051,7 +1054,7 @@ class RadarLine:
             plt.xlabel('<NE - distance (km) - SW>')
         else:
             plt.xlabel('distance (km)')
-        plt.ylabel('steady accumulation (ice-cm/yr)')
+        plt.ylabel('steady accumulation (mm-we/yr)')
         if self.reverse_distance:
             plt.gca().invert_xaxis()
 
@@ -1156,7 +1159,7 @@ class RadarLine:
 
 
     def parameters_save(self):
-        output=np.vstack((self.LON, self.LAT, self.distance,self.a, self.sigma_a, self.accusteady_layer))
+        output=np.vstack((self.LON, self.LAT, self.distance,self.a, self.sigma_a, self.accu_layer))
         header='#LON\tLAT\tdistance(km)\taccu(ice-m/yr)\tsigma_accu'
         header=header+'\tlayer '+str(int(self.age_surf/1000.))+'-'+str(int(self.iso_age[0]/1000.))+'kyr'
         for i in range(self.nbiso-1):
