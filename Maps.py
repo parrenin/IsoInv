@@ -325,6 +325,7 @@ for i,MapLabel in enumerate(list_maps):
         ax2.text(0.43,0.17,'C',color='orange',fontweight='normal',transform=ax2.transAxes,bbox=dict(facecolor='white', edgecolor='#767876', pad=1.0))
         ax2.text(0.50,0.12,'D',color='orange',fontweight='normal',transform=ax2.transAxes,bbox=dict(facecolor='white', edgecolor='#767876', pad=1.0))
         ax2.text(0.71,0.68,'E',color='orange',fontweight='normal',transform=ax2.transAxes,bbox=dict(facecolor='white', edgecolor='#767876', pad=1.0))
+        ax2.text(0.53,0.31,'F',color='orange',fontweight='normal',transform=ax2.transAxes,bbox=dict(facecolor='white', edgecolor='#767876', pad=1.0))
 
     if MapLabel=='bottom-age':
 
