@@ -235,7 +235,7 @@ class RadarLine:
             print 'interpolation method not recognized'
             quit()
         self.thkreal=f(np.concatenate((self.distance-self.resolution/2, np.array([self.distance[-1]+self.resolution/2]))))
-        self.thk=self.thkreal
+        self.thk=self.thkreal+0
 #        print 'Interpolation of bedrock: done.'
         self.iso=np.zeros((self.nbiso,np.size(self.distance)))
         self.hor=np.zeros((self.nbhor,np.size(self.distance)))
@@ -567,18 +567,19 @@ class RadarLine:
 #Residuals function
 
     def residuals1D(self, variables1D, j):
-        self.a[j]=variables1D[0]
-        variables1D=np.delete(variables1D,[0])
+        var=variables1D
+        self.a[j]=var[0]
+        var=np.delete(var,[0])
 #        print 'a: ',self.a[j]
 #        self.m=variables[np.size(self.distance):2*np.size(self.distance)]
-        self.pprime[j]=variables1D[0]
-        variables1D=np.delete(variables1D,[0])
+        self.pprime[j]=var[0]
+        var=np.delete(var,[0])
         if self.invert_G0:
-            self.G0[j]=variables1D[0]
-            variables1D=np.delete(variables1D,[0])
+            self.G0[j]=var[0]
+            var=np.delete(var,[0])
         if self.invert_thk:
-            self.thk[j]=variables1D[0]
-            variables1D=np.delete(variables1D,[0])
+            self.thk[j]=var[0]
+            var=np.delete(var,[0])
 
         self.model1D(j)
         f=interp1d(self.depth[:,j],self.age[:,j])
@@ -606,17 +607,18 @@ class RadarLine:
 
 
     def residuals(self, variables):
-        self.a=variables[0:np.size(self.distance)]
-        variables=np.delete[variables,np.zeros_like(self.distance)]
+        var=variables
+        self.a=var[0:np.size(self.distance)]
+        var=np.delete[var,np.zeros_like(self.distance)]
 #        self.m=variables[np.size(self.distance):2*np.size(self.distance)]
-        self.pprime=variables[0:np.size(self.distance)]
-        variables=np.delete[variables,np.zeros_like(self.distance)]
+        self.pprime=var[0:np.size(self.distance)]
+        var=np.delete[var,np.zeros_like(self.distance)]
         if self.invert_G0:
-            self.G0=variables[0:np.size(self.distance)]
-            variables=np.delete[variables,np.zeros_like(self.distance)]
+            self.G0=var[0:np.size(self.distance)]
+            var=np.delete[var,np.zeros_like(self.distance)]
         if self.invert_G0:
-            self.thk=variables[0:np.size(self.distance)]
-            variables=np.delete[variables,np.zeros_like(self.distance)]
+            self.thk=var[0:np.size(self.distance)]
+            var=np.delete[var,np.zeros_like(self.distance)]
 
         age=self.model()
         for j in range(np.size(self.distance)):
@@ -843,7 +845,9 @@ class RadarLine:
 
         fig=plt.figure('Model')
         plotmodel = fig.add_subplot(111, aspect=self.aspect)
-        plt.plot(self.distance, self.thk, color='k', linewidth=2)
+        plt.plot(self.distance, self.thkreal, color='k', linewidth=2, label='real bed')
+        plt.plot(self.distance, self.thk, color='k', linewidth=2, linestyle='--', label='effective bed')
+        plt.legend(loc=1)
         for i in range(self.nbiso):
             if i==0:
                 plt.plot(self.distance, self.iso[i,:], color='w', label='obs. isochrones')
@@ -1346,7 +1350,7 @@ elif RL.opt_method=='none1D':
         if RL.invert_G0:
             RL.variables1D=np.append(RL.variables1D,RL.G0[j])
         if RL.invert_thk:
-            RL.variables=np.append(RL.variables1D,RL.thk[j])
+            RL.variables1D=np.append(RL.variables1D,RL.thk[j])
         RL.residuals1D(RL.variables1D,j)
 elif RL.opt_method=='leastsq1D':
     print 'Optimization by leastsq1D'    
@@ -1357,7 +1361,7 @@ elif RL.opt_method=='leastsq1D':
         if RL.invert_G0:
             RL.variables1D=np.append(RL.variables1D,RL.G0[j])
         if RL.invert_thk:
-            RL.variables=np.append(RL.variables1D,RL.thk[j])
+            RL.variables1D=np.append(RL.variables1D,RL.thk[j])
         RL.variables1D,RL.hess1D,infodict,mesg,ier=leastsq(RL.residuals1D, RL.variables1D, args=(j), full_output=1)
         RL.residuals1D(RL.variables1D,j)
         if RL.calc_sigma==False:
@@ -1372,9 +1376,10 @@ elif RL.opt_method=='MH1D':
         if RL.invert_G0:
             RL.variables1D=np.append(RL.variables1D,RL.G0[j])
         if RL.invert_thk:
-            RL.variables=np.append(RL.variables1D,RL.thk[j])
+            RL.variables1D=np.append(RL.variables1D,RL.thk[j])
         RL.variables1D,RL.hess1D,infodict,mesg,ier=leastsq(RL.residuals1D, RL.variables1D, args=(j), full_output=1)
         cost=RL.cost_fct(RL.variables1D,j)
+        cost_accepted=np.array([])
         variables1D_accepted=np.array([RL.variables1D])
         agebot_accepted=np.array([RL.agebot[j]])
         agebot=RL.agebot[j]
@@ -1391,16 +1396,17 @@ elif RL.opt_method=='MH1D':
         for iter in range(RL.MHnbiter):
 #            print 'iteration no:',i
             RL.variables1Dtest=np.random.normal(RL.variables1D,np.sqrt(np.diag(RL.hess1D)))
-            costtest=RL.cost_fct(RL.variables1Dtest,j)
-            if random.uniform(0,1)<m.exp(-costtest+cost):
-                cost=costtest
-                RL.variables1D=RL.variables1Dtest
-                agebot=RL.agebot[j]
-                accu=RL.a[j]
-                G0=RL.G0[j]
-                melt=RL.m[j]
-                pprime=RL.pprime[j]
-                age=np.transpose(np.array([RL.age[:,j]]))
+            if RL.thk[j]<RL.thkreal[j] and RL.thk[j]>RL.iso[-1,j]:
+                costtest=RL.cost_fct(RL.variables1Dtest,j)
+                if random.uniform(0,1)<m.exp(-costtest+cost):
+                    cost=costtest
+                    RL.variables1D=RL.variables1Dtest
+                    agebot=RL.agebot[j]
+                    accu=RL.a[j]
+                    G0=RL.G0[j]
+                    melt=RL.m[j]
+                    pprime=RL.pprime[j]
+                    age=np.transpose(np.array([RL.age[:,j]]))
             agebot_accepted=np.append(agebot_accepted,agebot)
             accu_accepted=np.append(accu_accepted,accu)
             G0_accepted=np.append(G0_accepted,G0)
