@@ -234,7 +234,8 @@ class RadarLine:
         else:
             print 'interpolation method not recognized'
             quit()
-        self.thk=f(np.concatenate((self.distance-self.resolution/2, np.array([self.distance[-1]+self.resolution/2]))))
+        self.thkreal=f(np.concatenate((self.distance-self.resolution/2, np.array([self.distance[-1]+self.resolution/2]))))
+        self.thk=self.thkreal
 #        print 'Interpolation of bedrock: done.'
         self.iso=np.zeros((self.nbiso,np.size(self.distance)))
         self.hor=np.zeros((self.nbhor,np.size(self.distance)))
@@ -345,22 +346,22 @@ class RadarLine:
 
 
 
-
-        f=interp1d(np.concatenate((self.AICC2012_depth,np.array([self.AICC2012_depth[-1]+3000]))),np.concatenate((self.AICC2012_iedepth,np.array([self.AICC2012_iedepth[-1]+3000]))))
-        g=interp1d(np.concatenate((self.AICC2012_iedepth,np.array([self.AICC2012_iedepth[-1]+3000]))),np.concatenate((self.AICC2012_depth,np.array([self.AICC2012_depth[-1]+3000]))))
-#        self.isoie=f(self.iso)
-        self.thkie=f(self.thk)
-
         self.a=self.a*np.ones(np.size(self.distance))
         self.G0=self.G0*np.ones_like(self.distance)
 #        self.mu=self.m/self.a
         self.pprime=self.pprime*np.ones(np.size(self.distance))
         self.p=np.empty_like(self.pprime)
         self.s=self.s*np.ones(np.size(self.distance))
+        self.thkie=np.empty_like(self.distance)
 
         self.zetagrid=np.arange(0,1+self.dzeta,self.dzeta)
         self.zetagrid=self.zetagrid[::-1]
         self.zetagrid=np.transpose([self.zetagrid])
+        self.zeta=np.ones((np.size(self.zetagrid),np.size(self.distance)))*self.zetagrid
+        self.depth=np.empty_like(self.zeta)
+        self.depthie=np.empty_like(self.zeta)
+        self.zetaie=np.empty_like(self.zeta)
+        self.D=np.empty_like(self.zeta[:-1,:])
         self.agesteady=np.zeros((np.size(self.zetagrid),np.size(self.distance)))
         self.age=np.zeros((np.size(self.zetagrid),np.size(self.distance)))
         self.age_density=np.zeros((np.size(self.zetagrid)-1,np.size(self.distance)))
@@ -369,12 +370,7 @@ class RadarLine:
         self.Tf=np.empty_like(self.distance)
         self.Tm=np.empty_like(self.distance)
         self.alpha=np.empty_like(self.distance)
-        self.zeta=np.ones((np.size(self.zetagrid),np.size(self.distance)))*self.zetagrid
-        self.depth=self.thk*(1-self.zeta)
-        self.depthie=f(self.depth)
-        self.zetaie=(self.thkie-self.depthie)/self.thkie
         self.dist=np.ones((np.size(self.zetagrid),np.size(self.distance)))*self.distance
-        self.D=(self.depthie[1:,]-self.depthie[:-1,])/(self.depth[1:,]-self.depth[:-1,])
         self.DeltaT=np.empty_like(self.distance)
         self.G=np.empty_like(self.distance)
         self.m=np.empty_like(self.distance)
@@ -418,6 +414,15 @@ class RadarLine:
 # Model function
 
     def model1D(self, j):
+
+        #depth grids
+        f=interp1d(np.concatenate((self.AICC2012_depth,np.array([self.AICC2012_depth[-1]+3000]))),np.concatenate((self.AICC2012_iedepth,np.array([self.AICC2012_iedepth[-1]+3000]))))
+        self.thkie[j]=f(self.thk[j])
+#        print np.shape(self.zeta[:,j])
+        self.depth[:,j]=self.thk[j]*(1-self.zeta[:,j])
+        self.depthie[:,j]=f(self.depth[:,j])
+        self.zetaie[:,j]=(self.thkie[j]-self.depthie[:,j])/self.thkie[j]
+        self.D[:,j]=(self.depthie[1:,j]-self.depthie[:-1,j])/(self.depth[1:,j]-self.depth[:-1,j])
 
         #Steady plug flow without melting thermal model (cf. document from Catherine)
         self.p[j]=-1+m.exp(self.pprime[j])
@@ -563,11 +568,17 @@ class RadarLine:
 
     def residuals1D(self, variables1D, j):
         self.a[j]=variables1D[0]
+        variables1D=np.delete(variables1D,[0])
 #        print 'a: ',self.a[j]
 #        self.m=variables[np.size(self.distance):2*np.size(self.distance)]
-        self.pprime[j]=variables1D[1]
+        self.pprime[j]=variables1D[0]
+        variables1D=np.delete(variables1D,[0])
         if self.invert_G0:
-            self.G0[j]=variables1D[2]
+            self.G0[j]=variables1D[0]
+            variables1D=np.delete(variables1D,[0])
+        if self.invert_thk:
+            self.thk[j]=variables1D[0]
+            variables1D=np.delete(variables1D,[0])
 
         self.model1D(j)
         f=interp1d(self.depth[:,j],self.age[:,j])
@@ -596,10 +607,16 @@ class RadarLine:
 
     def residuals(self, variables):
         self.a=variables[0:np.size(self.distance)]
+        variables=np.delete[variables,np.zeros_like(self.distance)]
 #        self.m=variables[np.size(self.distance):2*np.size(self.distance)]
-        self.pprime=variables[np.size(self.distance):2*np.size(self.distance)]
+        self.pprime=variables[0:np.size(self.distance)]
+        variables=np.delete[variables,np.zeros_like(self.distance)]
         if self.invert_G0:
-            self.G0=variables[2*np.size(self.distance):3*np.size(self.distance)]
+            self.G0=variables[0:np.size(self.distance)]
+            variables=np.delete[variables,np.zeros_like(self.distance)]
+        if self.invert_G0:
+            self.thk=variables[0:np.size(self.distance)]
+            variables=np.delete[variables,np.zeros_like(self.distance)]
 
         age=self.model()
         for j in range(np.size(self.distance)):
@@ -1301,10 +1318,11 @@ print 'Data display'
 RL.data_display()
 if RL.opt_method=='leastsq':
     print 'Optimization by leastsq'
+    RL.variables=np.concatenate((RL.a,RL.pprime))
     if RL.invert_G0:
-        RL.variables=np.concatenate((RL.a,RL.pprime,RL.G0))
-    else:
-        RL.variables=np.concatenate((RL.a,RL.pprime))
+        RL.variables=np.concatenate((RL.variables,RL.G0))
+    if RL.invert_thk:
+        RL.variables=np.concatenate((RL.variables,RL.thk))
 #        self.variables=np.concatenate((self.a,self.m,self.s))
     RL.variables,RL.hess,infodict,mesg,ier=leastsq(RL.residuals, RL.variables, full_output=1)
     print mesg
@@ -1314,29 +1332,32 @@ if RL.opt_method=='leastsq':
         RL.hess=np.zeros((np.size(RL.variables),np.size(RL.variables)))
     RL.sigma()
 elif RL.opt_method=='none':
+    RL.variables=np.concatenate((RL.a,RL.pprime))
     if RL.invert_G0:
-        RL.variables=np.concatenate((RL.a,RL.pprime,RL.G0))
-    else:
-        RL.variables=np.concatenate((RL.a,RL.pprime))
+        RL.variables=np.concatenate((RL.variables,RL.G0))
+    if RL.invert_thk:
+        RL.variables=np.concatenate((RL.variables,RL.thk))
     print 'No optimization'
     RL.residuals(RL.variables)
 elif RL.opt_method=='none1D':
     print 'Forward model 1D'
     for j in range(np.size(RL.distance)):
+        RL.variables1D=np.array([RL.a[j],RL.pprime[j]])
         if RL.invert_G0:
-            RL.variables1D=np.array([ RL.a[j],RL.pprime[j],RL.G0[j] ])
-        else:
-            RL.variables1D=np.array([ RL.a[j],RL.pprime[j] ])
+            RL.variables1D=np.append(RL.variables1D,RL.G0[j])
+        if RL.invert_thk:
+            RL.variables=np.append(RL.variables1D,RL.thk[j])
         RL.residuals1D(RL.variables1D,j)
 elif RL.opt_method=='leastsq1D':
     print 'Optimization by leastsq1D'    
     for j in range(np.size(RL.distance)):
 #        if RL.thk[j]<>np.nan and 
         print 'index along the radar line: ', j
+        RL.variables1D=np.array([RL.a[j],RL.pprime[j]])
         if RL.invert_G0:
-            RL.variables1D=np.array([ RL.a[j],RL.pprime[j],RL.G0[j] ])
-        else:
-            RL.variables1D=np.array([ RL.a[j],RL.pprime[j] ])
+            RL.variables1D=np.append(RL.variables1D,RL.G0[j])
+        if RL.invert_thk:
+            RL.variables=np.append(RL.variables1D,RL.thk[j])
         RL.variables1D,RL.hess1D,infodict,mesg,ier=leastsq(RL.residuals1D, RL.variables1D, args=(j), full_output=1)
         RL.residuals1D(RL.variables1D,j)
         if RL.calc_sigma==False:
@@ -1347,10 +1368,11 @@ elif RL.opt_method=='MH1D':
     print 'Optimization by MH1D'    
     for j in range(np.size(RL.distance)):
         print 'index along the radar line: ', j
+        RL.variables1D=np.array([RL.a[j],RL.pprime[j]])
         if RL.invert_G0:
-            RL.variables1D=np.array([ RL.a[j],RL.pprime[j],RL.G0[j] ])
-        else:
-            RL.variables1D=np.array([ RL.a[j],RL.pprime[j] ])
+            RL.variables1D=np.append(RL.variables1D,RL.G0[j])
+        if RL.invert_thk:
+            RL.variables=np.append(RL.variables1D,RL.thk[j])
         RL.variables1D,RL.hess1D,infodict,mesg,ier=leastsq(RL.residuals1D, RL.variables1D, args=(j), full_output=1)
         cost=RL.cost_fct(RL.variables1D,j)
         variables1D_accepted=np.array([RL.variables1D])
