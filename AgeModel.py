@@ -800,7 +800,8 @@ class RadarLine:
 
         fig=plt.figure('Model steady')
         plotmodel = fig.add_subplot(111, aspect=self.aspect)
-        plt.plot(self.distance, self.thk, label='obs. bedrock', color='k', linewidth=2)
+        plt.plot(self.distance, self.thkreal, label='obs. bedrock', color='k', linewidth=2)
+        plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
         for i in range(self.nbiso):
             if i==0:
                 plt.plot(self.distance, self.iso[i,:], color='w', label='obs. isochrones')
@@ -845,9 +846,9 @@ class RadarLine:
 
         fig=plt.figure('Model')
         plotmodel = fig.add_subplot(111, aspect=self.aspect)
-        plt.plot(self.distance, self.thkreal, color='k', linewidth=2, label='real bed')
-        plt.plot(self.distance, self.thk, color='k', linewidth=2, linestyle='--', label='effective bed')
-        plt.legend(loc=1)
+        plt.plot(self.distance, self.thkreal, color='k', linewidth=2, label='bed')
+        plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
+#        plt.legend(loc=1)
         for i in range(self.nbiso):
             if i==0:
                 plt.plot(self.distance, self.iso[i,:], color='w', label='obs. isochrones')
@@ -897,7 +898,8 @@ class RadarLine:
 
         fig=plt.figure('Age misfit')
         plotmodel = fig.add_subplot(111, aspect=self.aspect)
-        plt.plot(self.distance, self.thk, color='k', linewidth=2)
+        plt.plot(self.distance, self.thkreal, color='k', linewidth=2)
+        plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
         for i in range(self.nbiso):
             colorscatter=self.iso_modage[i,:]-self.iso_age[i]
 #            print i, np.shape(colorscatter),np.shape(self.iso[i,:]),colorscatter
@@ -941,7 +943,8 @@ class RadarLine:
 
         fig = plt.figure('Model confidence interval')
         plotmodelci = fig.add_subplot(111, aspect=self.aspect)
-        plt.plot(self.distance, self.thk, color='k', linewidth=2)
+        plt.plot(self.distance, self.thkreal, color='k', linewidth=2)
+        plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
         for i in range(self.nbiso):
             if i==0:
                 plt.plot(self.distance, self.iso[i,:], color='w', label='obs. isochrones')
@@ -998,7 +1001,8 @@ class RadarLine:
 
 
         plt.figure('Thinning')
-        plt.plot(self.distance, self.thk, label='obs. bedrock', color='k', linewidth=2)
+        plt.plot(self.distance, self.thkreal, label='obs. bedrock', color='k', linewidth=2)
+        plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
         for i in range(self.nbiso):
             if i==0:
                 plt.plot(self.distance, self.iso[i,:], color='k', label='obs. isochrones')
@@ -1035,7 +1039,8 @@ class RadarLine:
         pp.close()
 
         fig=plt.figure('Temperature')
-        plt.plot(self.distance, self.thk, label='obs. bedrock', color='k', linewidth=2)
+        plt.plot(self.distance, self.thkreal, label='obs. bedrock', color='k', linewidth=2)
+        plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
         plt.plot(self.distance, np.where(self.is_fusion,np.nan,self.thk), color='b', linewidth=4)
         plt.contourf(self.dist, self.depth, self.T)
         if self.is_EDC:
@@ -1377,28 +1382,51 @@ elif RL.opt_method=='MH1D':
             RL.variables1D=np.append(RL.variables1D,RL.G0[j])
         if RL.invert_thk:
             RL.variables1D=np.append(RL.variables1D,RL.thk[j])
-        RL.variables1D,RL.hess1D,infodict,mesg,ier=leastsq(RL.residuals1D, RL.variables1D, args=(j), full_output=1)
+#        RL.variables1D,RL.hess1D,infodict,mesg,ier=leastsq(RL.residuals1D, RL.variables1D, args=(j), full_output=1)
+#        step=np.sqrt(np.diag(RL.hess1D))
+        step=np.diag(np.array([0.001, 0.1, 0.001, 10.])**2)
+#        cost_accepted=np.array([])
+#        variables1D_accepted=np.array([np.empty_like(RL.variables1D)])
+#        agebot_accepted=np.array([])
+#        agebot=RL.agebot[j]
+#        accu_accepted=np.array([])
+#        G0_accepted=np.array([])
+#        melt_accepted=np.array([])
+#        pprime_accepted=np.array([])
+#        age_accepted=np.transpose(np.array([RL.age[:,j]]))
+#        accu=RL.a[j]
+#        G0=RL.G0[j]
+#        melt=RL.m[j]
+#        pprime=RL.pprime[j]
+#        age=np.transpose(np.empty_like([RL.age[:,j]]))
         cost=RL.cost_fct(RL.variables1D,j)
-        cost_accepted=np.array([])
+
+        cost_accepted=np.array([cost])
         variables1D_accepted=np.array([RL.variables1D])
         agebot_accepted=np.array([RL.agebot[j]])
-        agebot=RL.agebot[j]
         accu_accepted=np.array([RL.a[j]])
         G0_accepted=np.array([RL.G0[j]])
         melt_accepted=np.array([RL.m[j]])
         pprime_accepted=np.array([RL.pprime[j]])
         age_accepted=np.transpose(np.array([RL.age[:,j]]))
+
+        agebot=RL.agebot[j]
         accu=RL.a[j]
         G0=RL.G0[j]
         melt=RL.m[j]
         pprime=RL.pprime[j]
         age=np.transpose(np.array([RL.age[:,j]]))
+
         for iter in range(RL.MHnbiter):
-#            print 'iteration no:',i
-            RL.variables1Dtest=np.random.normal(RL.variables1D,np.sqrt(np.diag(RL.hess1D)))
-            if RL.thk[j]<RL.thkreal[j] and RL.thk[j]>RL.iso[-1,j]:
+#            print 'iteration no:',iter
+            if iter==self.MHiter_adapt:
+                step=np.cov(np.transpose(variables1D_accepted))
+            RL.variables1Dtest=np.random.multivariate_normal(RL.variables1D,step)
+#            print RL.variables1Dtest[3],RL.invert_thk,RL.thkreal[j],RL.iso[-1,j]
+            if RL.invert_thk and RL.variables1Dtest[3]<=RL.thkreal[j] and RL.variables1Dtest[3]>max(RL.iso[:,j]): #This is dirty, it does not work when we invert the thickness but not the GF!
                 costtest=RL.cost_fct(RL.variables1Dtest,j)
-                if random.uniform(0,1)<m.exp(-costtest+cost):
+#                print costtest
+                if m.log(random.uniform(0,1))<=cost-costtest:
                     cost=costtest
                     RL.variables1D=RL.variables1Dtest
                     agebot=RL.agebot[j]
@@ -1407,6 +1435,8 @@ elif RL.opt_method=='MH1D':
                     melt=RL.m[j]
                     pprime=RL.pprime[j]
                     age=np.transpose(np.array([RL.age[:,j]]))
+            cost_accepted=np.append(cost_accepted,cost)
+            variables1D_accepted=np.vstack((variables1D_accepted,RL.variables1D))
             agebot_accepted=np.append(agebot_accepted,agebot)
             accu_accepted=np.append(accu_accepted,accu)
             G0_accepted=np.append(G0_accepted,G0)
@@ -1421,7 +1451,10 @@ elif RL.opt_method=='MH1D':
         RL.sigma_pprime[j]=np.std(pprime_accepted)
         RL.sigma_age[:,j]=np.std(age_accepted, axis=1)
         print 'min age at 85%',RL.agebotmin[j]
-        RL.variables1D,RL.hess1D,infodict,mesg,ier=leastsq(RL.residuals1D, RL.variables1D, args=(j), full_output=1)
+        RL.variables1D=variables1D_accepted[np.argmin(cost_accepted),:]
+#        print variables1D_accepted
+#        print cost_accepted
+#        RL.variables1D,RL.hess1D,infodict,mesg,ier=leastsq(RL.residuals1D, RL.variables1D, args=(j), full_output=1)
         RL.residuals1D(RL.variables1D,j)
 
 
