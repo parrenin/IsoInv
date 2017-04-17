@@ -416,11 +416,10 @@ class RadarLine:
     def model1D(self, j):
 
         #depth grids
-        f=interp1d(np.concatenate((self.AICC2012_depth,np.array([self.AICC2012_depth[-1]+3000]))),np.concatenate((self.AICC2012_iedepth,np.array([self.AICC2012_iedepth[-1]+3000]))))
-        self.thkie[j]=f(self.thk[j])
+        self.thkie[j]=np.interp(self.thk[j],np.concatenate((self.AICC2012_depth,np.array([self.AICC2012_depth[-1]+3000]))),np.concatenate((self.AICC2012_iedepth,np.array([self.AICC2012_iedepth[-1]+3000]))))
 #        print np.shape(self.zeta[:,j])
         self.depth[:,j]=self.thk[j]*(1-self.zeta[:,j])
-        self.depthie[:,j]=f(self.depth[:,j])
+        self.depthie[:,j]=np.interp(self.depth[:,j],np.concatenate((self.AICC2012_depth,np.array([self.AICC2012_depth[-1]+3000]))),np.concatenate((self.AICC2012_iedepth,np.array([self.AICC2012_iedepth[-1]+3000]))))
         self.zetaie[:,j]=(self.thkie[j]-self.depthie[:,j])/self.thkie[j]
         self.D[:,j]=(self.depthie[1:,j]-self.depthie[:-1,j])/(self.depth[1:,j]-self.depth[:-1,j])
 
@@ -497,8 +496,7 @@ class RadarLine:
 #            self.agesteady[i,:]=np.where(self.tau[i,:]+self.tau[i-1,:]>0,self.agesteady[i-1,:]+(self.depthie[i,:]-self.depthie[i-1,:])/self.a/(self.tau[i,:]+self.tau[i-1,:])*2,1000000)
 #            self.agesteady[i,:]=np.where(self.agesteady[i,:]<1000000,self.agesteady[i,:],1000000)
 
-        f=interp1d(np.concatenate((np.array([-1000000000]),self.AICC2012_steadyage,np.array([1e9*self.AICC2012_steadyage[-1]]))),np.concatenate((np.array([self.AICC2012_age[0]]),self.AICC2012_age,np.array([1e9*self.AICC2012_age[-1]]))))
-        self.age[:,j]=f(self.agesteady[:,j])
+        self.age[:,j]=np.interp(self.agesteady[:,j],np.concatenate((np.array([-1000000000]),self.AICC2012_steadyage,np.array([1e9*self.AICC2012_steadyage[-1]]))),np.concatenate((np.array([self.AICC2012_age[0]]),self.AICC2012_age,np.array([1e9*self.AICC2012_age[-1]]))))
 
         f=interp1d(self.depth[:,j],self.age[:,j])
         self.agebot[j]=f(max(self.depth[:,j])-60)
@@ -507,7 +505,7 @@ class RadarLine:
         self.age200m[j]=f(max(self.depth[:,j])-200)
         self.age250m[j]=f(max(self.depth[:,j])-250)
         self.hor_modage[:,j]=f(self.hor[:,j])
-        self.iso_modage[:,j]=f(self.iso[:,j])
+        self.iso_modage[:,j]=np.interp(self.iso[:,j],self.depth[:,j],self.age[:,j])
         h1=interp1d(self.age[:-1,j],self.age_density[:,j])
         h2=interp1d(self.age[:,j],self.depth[:,j])
         if self.agebot[j]>=1000000:
@@ -556,7 +554,7 @@ class RadarLine:
         self.twttBed[j]=(self.thk[j]-self.firn_correction)*100/84.248+250.  #TODO: make a function to convert to twtt, and make an array for the different isochrones.
 
 
-        return np.concatenate(( np.array([self.a[j]]),np.array([self.m[j]]),np.array([self.pprime[j]]),self.age[:,j],np.log(self.age[1:,j]),np.array([self.G0[j]]) ))
+        return np.concatenate(( np.array([self.a[j]]),np.array([self.m[j]]),np.array([self.pprime[j]]),self.age[:,j],np.log(self.age[1:,j]-self.age_surf),np.array([self.G0[j]]) ))
 
     def model(self):  #TODO: kill this or make a call to model(j)
         for j in range(np.size(self.distance)):
@@ -582,7 +580,7 @@ class RadarLine:
             var=np.delete(var,[0])
 
         self.model1D(j)
-        f=interp1d(self.depth[:,j],self.age[:,j])
+        f=interp1d(self.depth[:,j],self.age[:,j])  #Is this useful?
 #        print self.age[:,j]
 #        print self.iso_modage[:,j]
 #        print 'shape iso_age and iso_sigma:', np.shape(self.iso_age),np.shape(self.iso_sigma)
@@ -1382,9 +1380,12 @@ elif RL.opt_method=='MH1D':
             RL.variables1D=np.append(RL.variables1D,RL.G0[j])
         if RL.invert_thk:
             RL.variables1D=np.append(RL.variables1D,RL.thk[j])
-#        RL.variables1D,RL.hess1D,infodict,mesg,ier=leastsq(RL.residuals1D, RL.variables1D, args=(j), full_output=1)
-#        step=np.sqrt(np.diag(RL.hess1D))
-        step=np.diag(np.array([0.001, 0.1, 0.001, 10.])**2)
+        RL.variables1D,RL.hess1D,infodict,mesg,ier=leastsq(RL.residuals1D, RL.variables1D, args=(j), full_output=1)
+        step=RL.hess1D
+        if RL.invert_G0 and RL.invert_thk and RL.variables1D[3]>RL.thkreal[j]:
+            RL.variables1D[3]=RL.thkreal[j]
+            print 'thk > threal in the leastsq solution'
+#        step=np.diag(np.array([0.001, 0.1, 0.001, 10.])**2)
 #        cost_accepted=np.array([])
 #        variables1D_accepted=np.array([np.empty_like(RL.variables1D)])
 #        agebot_accepted=np.array([])
@@ -1408,7 +1409,7 @@ elif RL.opt_method=='MH1D':
         G0_accepted=np.array([RL.G0[j]])
         melt_accepted=np.array([RL.m[j]])
         pprime_accepted=np.array([RL.pprime[j]])
-        age_accepted=np.transpose(np.array([RL.age[:,j]]))
+        age_accepted=np.transpose(np.array([RL.age[:,j]]))  #FIXME: This does not work since the depth grid varies!
 
         agebot=RL.agebot[j]
         accu=RL.a[j]
@@ -1419,11 +1420,19 @@ elif RL.opt_method=='MH1D':
 
         for iter in range(RL.MHnbiter):
 #            print 'iteration no:',iter
-            if iter==self.MHiter_adapt:
+            if iter==RL.MHiter_adapt1 or iter==RL.MHiter_adapt2:
                 step=np.cov(np.transpose(variables1D_accepted))
+                cost_accepted=np.array([cost])
+                variables1D_accepted=np.array([RL.variables1D])
+                agebot_accepted=np.array([RL.agebot[j]])
+                accu_accepted=np.array([RL.a[j]])
+                G0_accepted=np.array([RL.G0[j]])
+                melt_accepted=np.array([RL.m[j]])
+                pprime_accepted=np.array([RL.pprime[j]])
+                age_accepted=np.transpose(np.array([RL.age[:,j]]))
             RL.variables1Dtest=np.random.multivariate_normal(RL.variables1D,step)
 #            print RL.variables1Dtest[3],RL.invert_thk,RL.thkreal[j],RL.iso[-1,j]
-            if RL.invert_thk and RL.variables1Dtest[3]<=RL.thkreal[j] and RL.variables1Dtest[3]>max(RL.iso[:,j]): #This is dirty, it does not work when we invert the thickness but not the GF!
+            if (RL.invert_thk and RL.variables1Dtest[3]<=RL.thkreal[j] and RL.variables1Dtest[3]>max(RL.iso[:,j])) or not RL.invert_thk: #This is dirty, it does not work when we invert the thickness but not the GF!
                 costtest=RL.cost_fct(RL.variables1Dtest,j)
 #                print costtest
                 if m.log(random.uniform(0,1))<=cost-costtest:
@@ -1435,8 +1444,9 @@ elif RL.opt_method=='MH1D':
                     melt=RL.m[j]
                     pprime=RL.pprime[j]
                     age=np.transpose(np.array([RL.age[:,j]]))
-            cost_accepted=np.append(cost_accepted,cost)
+            
             variables1D_accepted=np.vstack((variables1D_accepted,RL.variables1D))
+            cost_accepted=np.append(cost_accepted,cost)
             agebot_accepted=np.append(agebot_accepted,agebot)
             accu_accepted=np.append(accu_accepted,accu)
             G0_accepted=np.append(G0_accepted,G0)
