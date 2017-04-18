@@ -308,6 +308,7 @@ for i,MapLabel in enumerate(list_maps):
         ax2.text(0.35,0.28,'Concordia Ridge',color='black',fontweight='normal',transform=ax2.transAxes,rotation=-32)
         ax2.text(0.35,0.37,'Concordia Subglacial Trench',color='black',fontweight='normal',transform=ax2.transAxes,rotation=-32)
         ax2.text(0.52,0.56,'LDC',color='black',fontweight='normal',transform=ax2.transAxes)
+        ax2.text(0.53,0.31,'NP',color='black',fontweight='normal',transform=ax2.transAxes)
 
         candidates=readRasterBandAsArray(RLDir+'bedmap2/candidates_Brice_clipped.tif',1)
         candidates1=np.where(candidates<>np.nan,candidates*0+10,np.nan)
@@ -325,7 +326,6 @@ for i,MapLabel in enumerate(list_maps):
         ax2.text(0.43,0.17,'C',color='orange',fontweight='normal',transform=ax2.transAxes,bbox=dict(facecolor='white', edgecolor='#767876', pad=1.0))
         ax2.text(0.50,0.12,'D',color='orange',fontweight='normal',transform=ax2.transAxes,bbox=dict(facecolor='white', edgecolor='#767876', pad=1.0))
         ax2.text(0.71,0.68,'E',color='orange',fontweight='normal',transform=ax2.transAxes,bbox=dict(facecolor='white', edgecolor='#767876', pad=1.0))
-        ax2.text(0.53,0.31,'F',color='orange',fontweight='normal',transform=ax2.transAxes,bbox=dict(facecolor='white', edgecolor='#767876', pad=1.0))
 
     if MapLabel=='bottom-age':
 
@@ -417,8 +417,8 @@ for i,MapLabel in enumerate(list_maps):
         x,y=map1(LON,LAT)
 
         norm = Normalize()
-        map1.scatter(x,y, c=1/resolution*1e5, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
-        cblabel='Resolution at 1Myr (cm/kyr)'
+        map1.scatter(x,y, c=resolution/1e3, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
+        cblabel='Resolution at 1Myr (kyr/m)'
 #        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
 
 #        output=np.transpose(np.vstack((LON,LAT,resolution/1e3)))
@@ -434,8 +434,8 @@ for i,MapLabel in enumerate(list_maps):
         x,y=map1(LON,LAT)
 
         norm = Normalize()
-        map1.scatter(x,y, c=1/resolution*1e5, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
-        cblabel='Resolution at 1.2Myr (cm/kyr)'
+        map1.scatter(x,y, c=resolution/1e3, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
+        cblabel='Resolution at 1.2Myr (kyr/m)'
 #        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
 
 #        output=np.transpose(np.vstack((LON,LAT,resolution/1e3)))
@@ -450,9 +450,9 @@ for i,MapLabel in enumerate(list_maps):
         resolution=botage_array[:,12]
         x,y=map1(LON,LAT)
 
-        norm = Normalize(vmin=2., vmax=15.)
-        map1.scatter(x,y, c=1/resolution*1e5, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
-        cblabel='Resolution at 1.5Myr (cm/kyr)'
+        norm = Normalize(vmax=30.)
+        map1.scatter(x,y, c=resolution/1e3, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
+        cblabel='Resolution at 1.5Myr (kyr/m)'
 #        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
 
 #        output=np.transpose(np.vstack((LON,LAT,resolution/1e3)))

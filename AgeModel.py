@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import os
 import random
 from matplotlib.collections import LineCollection
-from matplotlib.colors import LogNorm
+from matplotlib.colors import LogNorm, Normalize
 from scipy.interpolate import interp1d
 from scipy.optimize import leastsq, basinhopping, minimize
 from matplotlib.backends.backend_pdf import PdfPages
@@ -898,13 +898,14 @@ class RadarLine:
         plotmodel = fig.add_subplot(111, aspect=self.aspect)
         plt.plot(self.distance, self.thkreal, color='k', linewidth=2)
         plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
+        norm=Normalize(vmin=-5000, vmax=5000)
         for i in range(self.nbiso):
             colorscatter=self.iso_modage[i,:]-self.iso_age[i]
 #            print i, np.shape(colorscatter),np.shape(self.iso[i,:]),colorscatter
             if i==0:
-                sc=plt.scatter(self.distance, self.iso[i,:], c=colorscatter, label='obs. isochrones', s=7, edgecolor='')
+                sc=plt.scatter(self.distance, self.iso[i,:], c=colorscatter, label='obs. isochrones', s=7, edgecolor='', norm=norm)
             else:
-                plt.scatter(self.distance, self.iso[i,:], c=colorscatter, s=7, edgecolor='')
+                plt.scatter(self.distance, self.iso[i,:], c=colorscatter, s=7, edgecolor='', norm=norm)
 #        levels=np.arange(0, 1600000, 100000)
 #        levels_color=np.arange(0, 1500000, 10000)
 #        plt.contourf(self.dist, self.depth, self.age, levels_color)
@@ -921,6 +922,7 @@ class RadarLine:
             plt.xlabel('distance (km)')
         plt.ylabel('depth (m)')
         if self.is_legend:
+            print 'test'
             leg=plt.legend(loc=1)
             frame=leg.get_frame()
             frame.set_facecolor('0.75')
@@ -1471,7 +1473,7 @@ elif RL.opt_method=='MH1D':
 else:
     print RL.opt_method,': Optimization method not recognized.'
     quit()
-print 'recalculating forward model'
+print 'calculating per layer accumulations'
 #RL.model()
 
 RL.accu_layers()
