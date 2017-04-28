@@ -1,5 +1,3 @@
-#TODO: save real accu per layer and not steady accu
-
 import time
 import sys
 import math as m
