@@ -305,10 +305,22 @@ for i,MapLabel in enumerate(list_maps):
         #bbox=dict(facecolor='white',edgecolor='red',alpha=0.6)
 #        ax2.text(0.19,0.57,"B", color='red', fontweight='bold', transform=ax2.transAxes)
 #        ax2.text(0.67,0.63,"B'", color='red', fontweight='bold', transform=ax2.transAxes)
-        ax2.text(0.35,0.28,'Concordia Ridge',color='black',fontweight='normal',transform=ax2.transAxes,rotation=-32)
-        ax2.text(0.35,0.37,'Concordia Subglacial Trench',color='black',fontweight='normal',transform=ax2.transAxes,rotation=-32)
-        ax2.text(0.52,0.56,'LDC',color='black',fontweight='normal',transform=ax2.transAxes)
-        ax2.text(0.53,0.31,'NP',color='black',fontweight='normal',transform=ax2.transAxes)
+        lon=124.7
+        lat=-75.1
+        x,y=map1(lon,lat)
+        plt.text(x,y,'Concordia Ridge',horizontalalignment='center',verticalalignment='center',rotation=-32)
+        lon=124.2
+        lat=-75
+        x,y=map1(lon,lat)
+        plt.text(x,y,'Concordia Subglacial Trench',horizontalalignment='center',verticalalignment='center',rotation=-32)
+        lon=122.4
+        lat=-75.2
+        x,y=map1(lon,lat)
+        plt.text(x,y,'LDC',horizontalalignment='center',verticalalignment='center')
+        lon=123.8
+        lat=-74.95
+        x,y=map1(lon,lat)
+        plt.text(x,y,'NP',horizontalalignment='center',verticalalignment='center')
 
         candidates=readRasterBandAsArray(RLDir+'bedmap2/candidates_Brice_clipped.tif',1)
         candidates1=np.where(candidates<>np.nan,candidates*0+10,np.nan)
@@ -321,11 +333,28 @@ for i,MapLabel in enumerate(list_maps):
         extent=(hmax, hmin, vmin, vmax)
         plt.imshow(candidates1, origin='lower', cmap='Oranges_r', extent=extent, alpha=0.2, interpolation='none')
 
-        ax2.text(0.6,0.56,'A',color='orange',fontweight='normal',transform=ax2.transAxes,bbox=dict(facecolor='white', edgecolor='#767876', pad=1.0))
-        ax2.text(0.34,0.24,'B',color='orange',fontweight='normal',transform=ax2.transAxes,bbox=dict(facecolor='white', edgecolor='#767876', pad=1.0))
-        ax2.text(0.43,0.17,'C',color='orange',fontweight='normal',transform=ax2.transAxes,bbox=dict(facecolor='white', edgecolor='#767876', pad=1.0))
-        ax2.text(0.50,0.12,'D',color='orange',fontweight='normal',transform=ax2.transAxes,bbox=dict(facecolor='white', edgecolor='#767876', pad=1.0))
-        ax2.text(0.71,0.68,'E',color='orange',fontweight='normal',transform=ax2.transAxes,bbox=dict(facecolor='white', edgecolor='#767876', pad=1.0))
+        lon=122
+        lat=-75.1
+        x,y=map1(lon,lat)
+        plt.text(x,y,'A',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
+        lon=124.9
+        lat=-75.2
+        x,y=map1(lon,lat)
+        plt.text(x,y,'B',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
+        lon=124.95
+        lat=-75
+        x,y=map1(lon,lat)
+        plt.text(x,y,'C',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
+        lon=124.95
+        lat=-74.85
+        x,y=map1(lon,lat)
+        plt.text(x,y,'D',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
+
+        lon=121.
+        lat=-75.05
+        x,y=map1(lon,lat)
+        plt.text(x,y,'E',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
+
 
     if MapLabel=='bottom-age':
 
