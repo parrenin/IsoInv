@@ -131,7 +131,7 @@ for i,MapLabel in enumerate(list_maps):
 
     map1.drawparallels(np.arange(-90.,81.,1.), labels=[True, False, False, True], dashes=[1, 5], color='0.5')
     map1.drawmeridians(np.arange(-180.,180.,2.), latmax=85., labels=[False, True, True, False], dashes=[1, 5], color='0.5')
-    map1.drawmapscale(lon1-1.2, lat1+0.2, lon1, lat1, 50, yoffset=10., barstyle='simple')
+    map1.drawmapscale(lon1-1.2, lat1+0.2, lon1, lat1, 20, yoffset=10., barstyle='simple')
 
 
 
@@ -310,7 +310,7 @@ for i,MapLabel in enumerate(list_maps):
         x,y=map1(lon,lat)
         plt.text(x,y,'Concordia Ridge',horizontalalignment='center',verticalalignment='center',rotation=-32)
         lon=124.2
-        lat=-75
+        lat=-75.2
         x,y=map1(lon,lat)
         plt.text(x,y,'Concordia Subglacial Trench',horizontalalignment='center',verticalalignment='center',rotation=-32)
         lon=122.4
@@ -447,7 +447,7 @@ for i,MapLabel in enumerate(list_maps):
 
         norm = Normalize()
         map1.scatter(x,y, c=resolution/1e3, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
-        cblabel='Resolution at 1Myr (kyr/m)'
+        cblabel='Resolution at 1Myr (kyr m$^{-1}$)'
 #        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
 
 #        output=np.transpose(np.vstack((LON,LAT,resolution/1e3)))
@@ -464,7 +464,7 @@ for i,MapLabel in enumerate(list_maps):
 
         norm = Normalize()
         map1.scatter(x,y, c=resolution/1e3, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
-        cblabel='Resolution at 1.2Myr (kyr/m)'
+        cblabel='Resolution at 1.2Myr (kyr m$^{-1}$)'
 #        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
 
 #        output=np.transpose(np.vstack((LON,LAT,resolution/1e3)))
@@ -481,7 +481,7 @@ for i,MapLabel in enumerate(list_maps):
 
         norm = Normalize(vmax=30.)
         map1.scatter(x,y, c=resolution/1e3, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
-        cblabel='Resolution at 1.5Myr (kyr/m)'
+        cblabel='Resolution at 1.5Myr (kyr m$^{-1}$)'
 #        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
 
 #        output=np.transpose(np.vstack((LON,LAT,resolution/1e3)))
@@ -547,7 +547,7 @@ for i,MapLabel in enumerate(list_maps):
         norm = Normalize(vmin=0.,vmax=3.)
 
         map1.scatter(x,y, c=melting*1e3, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
-        cblabel='Melting (mm/yr)'
+        cblabel='Melting (mm yr$^{-1}$)'
         
 
 #        output=np.transpose(np.vstack((LON,LAT,melting*1e3)))
@@ -566,7 +566,7 @@ for i,MapLabel in enumerate(list_maps):
 
 
         map1.scatter(x,y, c=sigma_melting*1e3, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
-        cblabel='$\sigma$ Melting (mm/yr)'
+        cblabel='$\sigma$ Melting (mm yr$^{-1}$)'
         
 
     elif MapLabel=='geothermal-heat-flux':
@@ -578,7 +578,7 @@ for i,MapLabel in enumerate(list_maps):
         norm = Normalize(vmin=40.,vmax=100.)
 
         map1.scatter(x,y, c=G0*1e3, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
-        cblabel='G$_0$ (mW/m$^2$)'
+        cblabel='G$_0$ (mW m$^{-2}$)'
         
 
     elif MapLabel=='geothermal-heat-flux-sigma':
@@ -589,7 +589,7 @@ for i,MapLabel in enumerate(list_maps):
         x,y=map1(LON,LAT)
 
         map1.scatter(x,y, c=sigma_G0*1e3, marker='o', lw=0., edgecolor='', s=dotsize)
-        cblabel='$\sigma_{G0}$ (mW/m$^2$)'
+        cblabel='$\sigma_{G0}$ (mW m$^{-2}$)'
         
 
     elif MapLabel=='pprime':
@@ -649,7 +649,7 @@ for i,MapLabel in enumerate(list_maps):
 #            accu=accu*(f(iso_age[i])-f(iso_age[i-1]))/(iso_age[i]-iso_age[i-1])
 
         map1.scatter(x,y, c=accu*1000*0.917, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
-        cblabel='accu (mm-we/yr)'
+        cblabel='accu (mm-we yr$^{-1}$)'
         
     elif MapLabel[0:7]=='age-hor':
         LON=hor_array[:,0]

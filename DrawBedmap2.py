@@ -6,10 +6,14 @@ import matplotlib.pyplot as plt
 import gdal
 import sys
 
-lat1=-75.5
-lon1=128.
-lat2=-74.8
-lon2=118.1
+#lat1=-75.5
+#lon1=128.
+#lat2=-74.8
+#lon2=118.1
+lat1=-75.35
+lon1=126.7
+lat2=-75
+lon2=120.5
 lonEDC=123.+21./60.
 latEDC=-75.1
 

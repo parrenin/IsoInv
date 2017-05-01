@@ -800,21 +800,21 @@ class RadarLine:
         plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
         for i in range(self.nbiso):
             if i==0:
-                plt.plot(self.distance, self.iso[i,:], color='w', label='obs. isochrones')
+                plt.plot(self.distance, self.iso[i,:], color='w', linewidth=1, label='obs. isochrones')
             else:
-                plt.plot(self.distance, self.iso[i,:], color='w')
+                plt.plot(self.distance, self.iso[i,:], color='w', linewidth=1)
         for i in range(self.nbhor):
             if i==0:
-                plt.plot(self.distance, self.hor[i,:], color='0.5', label='obs. horizons')
+                plt.plot(self.distance, self.hor[i,:], color='0.5', linewidth=1, label='obs. horizons')
             elif i>0 and i<self.nbhor-self.nbdsz:
-                plt.plot(self.distance, self.hor[i,:], color='0.5')
+                plt.plot(self.distance, self.hor[i,:], color='0.5', linewidth=1)
             elif i==self.nbhor-self.nbdsz:
-                plt.plot(self.distance, self.hor[i,:], color='r', label='obs. DSZ')
+                plt.plot(self.distance, self.hor[i,:], color='r', linewidth=1, label='obs. DSZ')
             else:
-                plt.plot(self.distance, self.hor[i,:], color='r')
+                plt.plot(self.distance, self.hor[i,:], color='r', linewidth=1)
         levels=np.arange(0, 1600, 100)
         levels_color=np.arange(0, 1500, 10)
-        plt.contourf(self.dist, self.depth, self.agesteady/1000., levels_color)
+        plt.contourf(self.dist, self.depth, self.agesteady/1000., levels_color, cmap='jet')
         if self.is_EDC:
             EDC_x=np.array([self.distance_EDC, self.distance_EDC])
             EDC_y=np.array([0., 3200.])
@@ -847,21 +847,21 @@ class RadarLine:
 #        plt.legend(loc=1)
         for i in range(self.nbiso):
             if i==0:
-                plt.plot(self.distance, self.iso[i,:], color='w', label='obs. isochrones')
+                plt.plot(self.distance, self.iso[i,:], color='w', linewidth=1, label='obs. isochrones')
             else:
-                plt.plot(self.distance, self.iso[i,:], color='w')
+                plt.plot(self.distance, self.iso[i,:], color='w', linewidth=1)
         for i in range(self.nbhor):
             if i==0:
-                plt.plot(self.distance, self.hor[i,:], color='0.5', label='obs. horizons')
+                plt.plot(self.distance, self.hor[i,:], color='0.5', linewidth=1, label='obs. horizons')
             elif i>0 and i<self.nbhor-self.nbdsz:
-                plt.plot(self.distance, self.hor[i,:], color='0.5')
+                plt.plot(self.distance, self.hor[i,:], color='0.5', linewidth=1)
             elif i==self.nbhor-self.nbdsz:
-                plt.plot(self.distance, self.hor[i,:], color='r', label='obs. DSZ')
+                plt.plot(self.distance, self.hor[i,:], color='r', linewidth=1, label='obs. DSZ')
             else:
-                plt.plot(self.distance, self.hor[i,:], color='r')
+                plt.plot(self.distance, self.hor[i,:], color='r', linewidth=1)
         levels=np.arange(0, 1600, 100)
         levels_color=np.arange(0, 1500, 10)
-        plt.contourf(self.dist, self.depth, self.age/1000., levels_color)
+        plt.contourf(self.dist, self.depth, self.age/1000., levels_color, cmap='jet')
         if self.is_EDC:
             EDC_x=np.array([self.distance_EDC, self.distance_EDC])
             EDC_y=np.array([0., 3200.])
