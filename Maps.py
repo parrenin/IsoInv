@@ -100,7 +100,7 @@ for  i,RLlabel in enumerate(list_RL_extra):
 
 
 #
-list_maps=['radar-lines','melting','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','bottom-age','min-bottom-age','age-100m','age-150m','age-200m','age-250m', 'resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr', 'geothermal-heat-flux','geothermal-heat-flux-sigma','pprime','pprime-sigma','accu-sigma','accu-steady']
+list_maps=['accu-steady','pprime', 'geothermal-heat-flux','melting','bottom-age','radar-lines','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','min-bottom-age','age-100m','age-150m','age-200m','age-250m', 'resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr','geothermal-heat-flux-sigma','pprime-sigma','accu-sigma']
 list_length=len(list_maps)
 for i in range(nbiso):
     list_maps.append('accu-layer'+ "%02i"%(i+1) +'_'+str(int(iso_age[i]/1000.))+'-'+str(int(iso_age[i+1]/1000.))+'kyr' )
@@ -129,8 +129,8 @@ for i,MapLabel in enumerate(list_maps):
     #m.fillcontinents(color='white',lake_color='aqua')
     #m.drawmapboundary(fill_color='aqua')
 
-    map1.drawparallels(np.arange(-90.,81.,1.), labels=[True, False, False, True], dashes=[1, 5], color='0.5')
-    map1.drawmeridians(np.arange(-180.,180.,2.), latmax=85., labels=[False, True, True, False], dashes=[1, 5], color='0.5')
+    map1.drawparallels(np.arange(-90.,81.,lat_step), labels=[True, False, False, True], dashes=[1, 5], color='0.5')
+    map1.drawmeridians(np.arange(-180.,180.,lon_step), latmax=85., labels=[False, True, True, False], dashes=[1, 5], color='0.5')
     map1.drawmapscale(lon1-1.2, lat1+0.2, lon1, lat1, 20, yoffset=10., barstyle='simple')
 
 
@@ -201,7 +201,13 @@ for i,MapLabel in enumerate(list_maps):
 #        cs=map1.imshow(zz, extent=[-3333,3333,-3333,3333], alpha=0.25)
     levels=np.arange(-1000., 900., 100.)
 
-    plt.imshow(zz[::-1,:], extent=[max(x),min(x),max(y),min(y)], cmap='terrain', norm=Normalize(vmin=-1000, vmax=900), alpha=0.4)
+    if MapLabel=='radar-lines':
+        cmap='terrain'
+        alpha=0.4
+    else:
+        cmap='gray'
+        alpha=0.6
+    plt.imshow(zz[::-1,:], extent=[max(x),min(x),max(y),min(y)], cmap=cmap, norm=Normalize(vmin=-700, vmax=600), alpha=alpha)
 
 #    x1_bm2,y1_bm2=map1(lon1_bm2,lat1_bm2)
 #    x2_bm2,y2_bm2=map1(lon2_bm2,lat2_bm2)
@@ -268,7 +274,10 @@ for i,MapLabel in enumerate(list_maps):
 #    plt.ylim=(y1,y2)
 
     ##Draw color bar
-    cb0=plt.colorbar(orientation='horizontal', shrink=0.7, pad=0)
+    if MapLabel=='radar-lines':
+        cb0=plt.colorbar(orientation='horizontal', shrink=0.7, pad=0.05)
+    else:
+        cb0=plt.colorbar(orientation='horizontal', shrink=0.7, pad=0)
     cb0.set_label('Bedrock elevation (m)')
 
     #Draw continent's contour
@@ -300,11 +309,16 @@ for i,MapLabel in enumerate(list_maps):
 
 
         ax2 = plt.axes()
-#        ax2.text(0.485,0.38,'A', color='red', fontweight='bold', transform=ax2.transAxes)
-#        ax2.text(0.48,0.96,"A'", color='red', fontweight='bold', transform=ax2.transAxes)
-        #bbox=dict(facecolor='white',edgecolor='red',alpha=0.6)
-#        ax2.text(0.19,0.57,"B", color='red', fontweight='bold', transform=ax2.transAxes)
-#        ax2.text(0.67,0.63,"B'", color='red', fontweight='bold', transform=ax2.transAxes)
+        lon=124.4520
+        lat=-74.8901
+        x,y=map1(lon,lat)
+        plt.text(x,y,'A', color='red', fontweight='bold')
+
+        lon=121.7368
+        lat=-75.4481
+        x,y=map1(lon,lat)
+        plt.text(x,y,"A'", color='red', fontweight='bold')
+        
         lon=124.7
         lat=-75.1
         x,y=map1(lon,lat)
@@ -313,14 +327,6 @@ for i,MapLabel in enumerate(list_maps):
         lat=-75.2
         x,y=map1(lon,lat)
         plt.text(x,y,'Concordia Subglacial Trench',horizontalalignment='center',verticalalignment='center',rotation=-32)
-        lon=122.4
-        lat=-75.2
-        x,y=map1(lon,lat)
-        plt.text(x,y,'LDC',horizontalalignment='center',verticalalignment='center')
-        lon=123.8
-        lat=-74.95
-        x,y=map1(lon,lat)
-        plt.text(x,y,'NP',horizontalalignment='center',verticalalignment='center')
 
         candidates=readRasterBandAsArray(RLDir+'bedmap2/candidates_Brice_clipped.tif',1)
         candidates1=np.where(candidates<>np.nan,candidates*0+10,np.nan)
@@ -368,6 +374,17 @@ for i,MapLabel in enumerate(list_maps):
         cblabel='Bottom age (Myr)'
         levels=np.array([0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 2, 2.5, 3, 3.5, 4, 5])
 
+        ax2 = plt.axes()
+        lon=122.4
+        lat=-75.32
+        x,y=map1(lon,lat)
+        plt.text(x,y,'LDCP',horizontalalignment='center',verticalalignment='center')
+        lon=123.8
+        lat=-74.95
+        x,y=map1(lon,lat)
+        plt.text(x,y,'NP',horizontalalignment='center',verticalalignment='center')
+
+
 #        output=np.transpose(np.vstack((LON,LAT,botage)))
 #        with open(RLDir+'agebottom.txt','w') as f:
 #            f.write('#LON\tLAT\tbottom age (yr)\n')
@@ -384,6 +401,17 @@ for i,MapLabel in enumerate(list_maps):
         map1.scatter(x,y, c=minbotage/1e6, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
         cblabel='Minimum bottom age (Myr)'
         levels=np.array([0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6, 2, 2.5, 3, 3.5, 4, 5])
+
+        ax2 = plt.axes()
+        lon=122.4
+        lat=-75.32
+        x,y=map1(lon,lat)
+        plt.text(x,y,'LDCP',horizontalalignment='center',verticalalignment='center')
+        lon=123.8
+        lat=-74.95
+        x,y=map1(lon,lat)
+        plt.text(x,y,'NP',horizontalalignment='center',verticalalignment='center')
+
 
 #        output=np.transpose(np.vstack((LON,LAT,minbotage)))
 #        with open(RLDir+'minagebottom.txt','w') as f:
@@ -484,6 +512,17 @@ for i,MapLabel in enumerate(list_maps):
         cblabel='Resolution at 1.5Myr (kyr m$^{-1}$)'
 #        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
 
+        ax2 = plt.axes()
+        lon=122.4
+        lat=-75.32
+        x,y=map1(lon,lat)
+        plt.text(x,y,'LDCP',horizontalalignment='center',verticalalignment='center')
+        lon=123.8
+        lat=-74.95
+        x,y=map1(lon,lat)
+        plt.text(x,y,'NP',horizontalalignment='center',verticalalignment='center')
+
+
 #        output=np.transpose(np.vstack((LON,LAT,resolution/1e3)))
 #        with open(RLDir+'resolution1.5Myr.txt','w') as f:
 #            f.write('#LON\tLAT\tresolution (kyr/m)\n')
@@ -531,6 +570,17 @@ for i,MapLabel in enumerate(list_maps):
         res=map1.scatter(x,y, c=height, marker='o', lw=0., edgecolor='', s=dotsize)
         cblabel='Height above bed (m)'
         
+        ax2 = plt.axes()
+        lon=122.4
+        lat=-75.32
+        x,y=map1(lon,lat)
+        plt.text(x,y,'LDCP',horizontalalignment='center',verticalalignment='center')
+        lon=123.8
+        lat=-74.95
+        x,y=map1(lon,lat)
+        plt.text(x,y,'NP',horizontalalignment='center',verticalalignment='center')
+
+
 #        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
 #        cb.set_ticks(levels)
 #        cb.set_ticklabels(levels)
@@ -547,7 +597,7 @@ for i,MapLabel in enumerate(list_maps):
         norm = Normalize(vmin=0.,vmax=3.)
 
         map1.scatter(x,y, c=melting*1e3, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
-        cblabel='Melting (mm yr$^{-1}$)'
+        cblabel='$\overline{m}$ (mm yr$^{-1}$)'
         
 
 #        output=np.transpose(np.vstack((LON,LAT,melting*1e3)))
@@ -578,7 +628,7 @@ for i,MapLabel in enumerate(list_maps):
         norm = Normalize(vmin=40.,vmax=100.)
 
         map1.scatter(x,y, c=G0*1e3, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
-        cblabel='G$_0$ (mW m$^{-2}$)'
+        cblabel='$G_0$ (mW m$^{-2}$)'
         
 
     elif MapLabel=='geothermal-heat-flux-sigma':
@@ -602,7 +652,7 @@ for i,MapLabel in enumerate(list_maps):
 #        levels=np.arange(-1,3.1, 0.1)
         norm = Normalize(vmin=-1.,vmax=3.)
         map1.scatter(x,y, c=pprime, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
-        cblabel='p\''
+        cblabel='$p$\''
         
 
 #        cb.set_ticks(levels)
@@ -649,7 +699,7 @@ for i,MapLabel in enumerate(list_maps):
 #            accu=accu*(f(iso_age[i])-f(iso_age[i-1]))/(iso_age[i]-iso_age[i-1])
 
         map1.scatter(x,y, c=accu*1000*0.917, marker='o', lw=0., edgecolor='', s=dotsize, norm=norm)
-        cblabel='accu (mm-we yr$^{-1}$)'
+        cblabel='$\overline{a}$ (mm-we yr$^{-1}$)'
         
     elif MapLabel[0:7]=='age-hor':
         LON=hor_array[:,0]
@@ -668,7 +718,7 @@ for i,MapLabel in enumerate(list_maps):
 
 
     if MapLabel<>'radar-lines':
-        cb=plt.colorbar(orientation='horizontal', shrink=0.7, pad=0.1)
+        cb=plt.colorbar(orientation='horizontal', shrink=0.7, pad=0.05)
         cb.set_label(cblabel)
         if levels<>'auto':
             cb.set_ticks(levels)
