@@ -7,7 +7,7 @@ import os
 import random
 from matplotlib.collections import LineCollection
 from matplotlib.colors import LogNorm, Normalize
-from scipy.interpolate import interp1d
+from scipy.interpolate import interp1d  #Deprecated, use numpy.interp
 from scipy.optimize import leastsq, basinhopping, minimize
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.special import erf

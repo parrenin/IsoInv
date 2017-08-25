@@ -100,7 +100,7 @@ for  i,RLlabel in enumerate(list_RL_extra):
 
 
 #
-list_maps=['accu-steady','pprime', 'geothermal-heat-flux','melting','bottom-age','radar-lines','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','min-bottom-age','age-100m','age-150m','age-200m','age-250m', 'resolution-1Myr','resolution-1.2Myr','resolution-1.5Myr','geothermal-heat-flux-sigma','pprime-sigma','accu-sigma']
+list_maps=['resolution-1.5Myr','accu-steady','pprime', 'geothermal-heat-flux','melting','bottom-age','radar-lines','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','min-bottom-age','age-100m','age-150m','age-200m','age-250m', 'resolution-1Myr','resolution-1.2Myr','geothermal-heat-flux-sigma','pprime-sigma','accu-sigma']
 list_length=len(list_maps)
 for i in range(nbiso):
     list_maps.append('accu-layer'+ "%02i"%(i+1) +'_'+str(int(iso_age[i]/1000.))+'-'+str(int(iso_age[i+1]/1000.))+'kyr' )
@@ -507,7 +507,7 @@ for i,MapLabel in enumerate(list_maps):
         resolution=botage_array[:,12]
         x,y=map1(LON,LAT)
 
-        norm = Normalize(vmax=30.)
+        norm = Normalize(vmax=20.)
         map1.scatter(x,y, c=resolution/1e3, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
         cblabel='Resolution at 1.5Myr (kyr m$^{-1}$)'
 #        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
@@ -681,7 +681,7 @@ for i,MapLabel in enumerate(list_maps):
         LAT=accu_array[:,1]
         x,y=map1(LON,LAT)
         if MapLabel=='accu-steady':
-            norm = Normalize(vmin=10.,vmax=30.)
+            norm = Normalize(vmin=10.,vmax=25.)
             accu=accu_array[:,3]
         elif MapLabel=='accu-sigma':
             accu=accu_array[:,4]
