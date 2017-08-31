@@ -401,11 +401,24 @@ class RadarLine:
         self.twtt1dot2Myr=np.nan*np.ones_like(self.distance)
         self.twtt1dot5Myr=np.nan*np.ones_like(self.distance)
         self.sigmabotage=np.empty_like(self.distance)
-        self.agebotmin=np.empty_like(self.distance)
         self.age_density1Myr=np.nan*np.ones_like(self.distance)
         self.age_density1dot2Myr=np.nan*np.ones_like(self.distance)
         self.age_density1dot5Myr=np.nan*np.ones_like(self.distance)
         self.twttBed=np.nan*np.ones_like(self.distance)
+        self.agebotmin=np.empty_like(self.distance)
+        self.agebotmax=np.empty_like(self.distance)
+        self.amin=np.empty_like(self.distance)
+        self.amax=np.empty_like(self.distance)
+        self.G0min=np.empty_like(self.distance)
+        self.G0max=np.empty_like(self.distance)
+        self.mmin=np.empty_like(self.distance)
+        self.mmax=np.empty_like(self.distance)
+        self.pprimemin=np.empty_like(self.distance)
+        self.pprimemax=np.empty_like(self.distance)
+        self.reso1dot5Myrmin=np.empty_like(self.distance)
+        self.reso1dot5Myrmax=np.empty_like(self.distance)
+        self.height1dot5Myrmin=np.empty_like(self.distance)
+        self.height1dot5Myrmax=np.empty_like(self.distance)
 
 
 
@@ -1095,11 +1108,13 @@ class RadarLine:
     def parameters_display(self):
         f=plt.figure('Parameters')
 #        f=plt.figure('Parameters', figsize=(4,6))
-        plotpara = plt.subplot(311, aspect=self.aspect/(self.accu_max-self.accu_min)*self.max_depth/3)
-        plt.plot(self.distance, self.a*100, label='accumulation', color='b')
-        plt.plot(self.distance, (self.a-self.sigma_a)*100, color='b', linestyle='--')
-        plt.plot(self.distance, (self.a+self.sigma_a)*100, color='b', linestyle='--')
-        plt.ylabel('accu. (cm/yr)')
+
+        plotpara = plt.subplot(711, aspect=self.aspect/(self.accu_max-self.accu_min)*self.max_depth/7)
+        plt.plot(self.distance, self.a*100, label='accumulation', color='k')
+        plt.plot(self.distance, (self.amin)*100, color='k', linestyle='--')
+        plt.plot(self.distance, (self.amax)*100, color='k', linestyle='--')
+        plt.ylabel('accu. (cm/yr)', fontsize=10)
+        plt.tick_params(axis='y', which='both', labelsize=8)
         x1,x2,y1,y2 = plt.axis()
         plt.axis((min(self.distance),max(self.distance), self.accu_min, self.accu_max))
         if self.reverse_distance:
@@ -1112,33 +1127,38 @@ class RadarLine:
             else:
                 plt.plot(EDC_x, EDC_y, label='EDC ice core', color='r', linewidth=2)
 #        plt.legend()
+
         if self.settick=='manual':
             plotpara.set_xticks(np.arange(self.min_tick,self.max_tick+1.,self.delta_tick))
-        plotpara=plt.subplot(312, aspect=self.aspect/(self.melting_max-self.melting_min)*self.max_depth/3)
-        plt.plot(self.distance, self.m*1000, label='melting', color='r')
-        plt.plot(self.distance, (self.m-self.sigma_m)*1000, color='r', linestyle='--')
-        plt.plot(self.distance, (self.m+self.sigma_m)*1000, color='r', linestyle='--')
-        plt.ylabel('melting (mm/yr)')
+        plotpara=plt.subplot(712, aspect=self.aspect/(self.G0_max-self.G0_min)*self.max_depth/7)
+        plt.plot(self.distance, self.G0*1000, label='$G_0$', color='k')
+        plt.plot(self.distance, (self.G0min)*1000, color='k', linestyle='--')
+        plt.plot(self.distance, (self.G0max)*1000, color='k', linestyle='--')
+        plt.ylabel('$G_0$ (mW/m$^2$)', fontsize=10)
+        plt.tick_params(axis='y', which='both', labelsize=8)
         x1,x2,y1,y2 = plt.axis()
-        plt.axis((min(self.distance),max(self.distance),self.melting_min,self.melting_max))
+        plt.axis((min(self.distance),max(self.distance),self.G0_min,self.G0_max))
         if self.reverse_distance:
             plt.gca().invert_xaxis()
         if self.is_EDC:
             EDC_x=np.array([self.distance_EDC, self.distance_EDC])
-            EDC_y=np.array([self.melting_min, self.melting_max])
+            EDC_y=np.array([self.G0_min, self.g0_max])
             if self.EDC_line_dashed==True:
                 plt.plot(EDC_x, EDC_y, label='EDC ice core', color='r', linewidth=2, linestyle='--')
             else:
                 plt.plot(EDC_x, EDC_y, label='EDC ice core', color='r', linewidth=2)
         plotpara.yaxis.tick_right()
         plotpara.yaxis.set_label_position('right')
+
+
         if self.settick=='manual':
             plotpara.set_xticks(np.arange(self.min_tick,self.max_tick+1.,self.delta_tick))
-        plotpara=plt.subplot(313, aspect=self.aspect/(m.log(self.p_max+1)-m.log(self.p_min+1))*self.max_depth/3)
-        plt.plot(self.distance, self.pprime, label='p', color='g')
-        plt.plot(self.distance, self.pprime-self.sigma_pprime, color='g', linestyle='--')
-        plt.plot(self.distance, self.pprime+self.sigma_pprime, color='g', linestyle='--')
-        plt.ylabel('p+1 parameter')
+        plotpara=plt.subplot(713, aspect=self.aspect/(m.log(self.p_max+1)-m.log(self.p_min+1))*self.max_depth/7)
+        plt.plot(self.distance, self.pprime, label='p', color='k')
+        plt.plot(self.distance, self.pprimemin, color='k', linestyle='--')
+        plt.plot(self.distance, self.pprimemax, color='k', linestyle='--')
+        plt.ylabel('p+1 parameter', fontsize=10)
+        plt.tick_params(axis='y', which='both', labelsize=8)
         if self.is_EDC:
             EDC_x=np.array([self.distance_EDC, self.distance_EDC])
             EDC_y=np.array([m.log(self.p_min), m.log(self.p_max)])
@@ -1154,6 +1174,99 @@ class RadarLine:
             plotpara.set_xticks(np.arange(self.min_tick,self.max_tick+1.,self.delta_tick))
         x1,x2,y1,y2 = plt.axis()
         plt.axis((min(self.distance),max(self.distance),m.log(self.p_min+1),m.log(self.p_max+1)))
+
+        if self.settick=='manual':
+            plotpara.set_xticks(np.arange(self.min_tick,self.max_tick+1.,self.delta_tick))
+        plotpara=plt.subplot(714, aspect=self.aspect/(self.melting_max-self.melting_min)*self.max_depth/7)
+        plt.plot(self.distance, self.m*1000, label='melting', color='k')
+        plt.plot(self.distance, (self.mmin)*1000, color='k', linestyle='--')
+        plt.plot(self.distance, (self.mmax)*1000, color='k', linestyle='--')
+        plt.ylabel('melting (mm/yr)', fontsize=10)
+        plt.tick_params(axis='y', which='both', labelsize=8)
+        x1,x2,y1,y2 = plt.axis()
+        plt.axis((min(self.distance),max(self.distance),self.melting_min,self.melting_max))
+        if self.reverse_distance:
+            plt.gca().invert_xaxis()
+        if self.is_EDC:
+            EDC_x=np.array([self.distance_EDC, self.distance_EDC])
+            EDC_y=np.array([self.melting_min, self.melting_max])
+            if self.EDC_line_dashed==True:
+                plt.plot(EDC_x, EDC_y, label='EDC ice core', color='r', linewidth=2, linestyle='--')
+            else:
+                plt.plot(EDC_x, EDC_y, label='EDC ice core', color='r', linewidth=2)
+        plotpara.yaxis.tick_right()
+        plotpara.yaxis.set_label_position('right')
+
+        if self.settick=='manual':
+            plotpara.set_xticks(np.arange(self.min_tick,self.max_tick+1.,self.delta_tick))
+        plotpara=plt.subplot(715, aspect=self.aspect/(m.log(self.age_max)-m.log(self.age_min))*self.max_depth/7)
+        plt.plot(self.distance, np.log(self.agebot/1000000), label='age 60 m', color='k')
+        plt.plot(self.distance, np.log(self.agebotmin/1000000), color='k', linestyle='--')
+        plt.plot(self.distance, np.log(self.agebotmax/1000000), color='k', linestyle='--')
+        plt.ylabel('age (Myr)', fontsize=10)
+        plt.tick_params(axis='y', which='both', labelsize=8)
+        plotpara.set_yticks(np.log(np.concatenate((np.arange(1.,10.)/10.,np.arange(1.,10.) )) ))
+        labels=["","","","","0.5","","0.7","","","1", "2", "3", "4", "", "6", "", "", "", "1"]
+        plotpara.set_yticklabels(labels)
+        x1,x2,y1,y2 = plt.axis()
+        plt.axis((min(self.distance),max(self.distance),m.log(self.age_min),m.log(self.age_max)))
+        if self.reverse_distance:
+            plt.gca().invert_xaxis()
+        if self.is_EDC:
+            EDC_x=np.array([self.distance_EDC, self.distance_EDC])
+            EDC_y=np.array([self.melting_min, self.melting_max])
+            if self.EDC_line_dashed==True:
+                plt.plot(EDC_x, EDC_y, label='EDC ice core', color='r', linewidth=2, linestyle='--')
+            else:
+                plt.plot(EDC_x, EDC_y, label='EDC ice core', color='r', linewidth=2)
+        plotpara.yaxis.tick_left()
+        plotpara.yaxis.set_label_position('left')
+
+        if self.settick=='manual':
+            plotpara.set_xticks(np.arange(self.min_tick,self.max_tick+1.,self.delta_tick))
+        plotpara=plt.subplot(716, aspect=self.aspect/(self.height_max-self.height_min)*self.max_depth/7)
+        plt.plot(self.distance, self.height1dot5Myr, label='height above bed', color='k')
+        plt.plot(self.distance, self.height1dot5Myrmin, label='height above bed', color='k', linestyle='--')
+        plt.plot(self.distance, self.height1dot5Myrmax+self.sigma_height1dot5Myr, label='height above bed', color='k', linestyle='--')
+        plt.ylabel('height (m)', fontsize=10)
+        plt.tick_params(axis='y', which='both', labelsize=8)
+        x1,x2,y1,y2 = plt.axis()
+        plt.axis((min(self.distance),max(self.distance),self.height_min,self.height_max))
+        if self.reverse_distance:
+            plt.gca().invert_xaxis()
+        if self.is_EDC:
+            EDC_x=np.array([self.distance_EDC, self.distance_EDC])
+            EDC_y=np.array([self.melting_min, self.melting_max])
+            if self.EDC_line_dashed==True:
+                plt.plot(EDC_x, EDC_y, label='EDC ice core', color='r', linewidth=2, linestyle='--')
+            else:
+                plt.plot(EDC_x, EDC_y, label='EDC ice core', color='r', linewidth=2)
+        plotpara.yaxis.tick_right()
+        plotpara.yaxis.set_label_position('right')
+
+        if self.settick=='manual':
+            plotpara.set_xticks(np.arange(self.min_tick,self.max_tick+1.,self.delta_tick))
+        plotpara=plt.subplot(717, aspect=self.aspect/(self.reso_max-self.reso_min)*self.max_depth/7)
+        plt.plot(self.distance, self.age_density1dot5Myr/1000, label='resolution', color='k')
+        plt.plot(self.distance, (self.reso1dot5Myrmin)/1000, label='resolution', color='k', linestyle='--')
+        plt.plot(self.distance, (self.reso1dot5Myrmax)/1000, label='resolution', color='k', linestyle='--')
+        plt.ylabel('resolution (kyr/m)', fontsize=10)
+        plt.tick_params(axis='y', which='both', labelsize=8)
+        x1,x2,y1,y2 = plt.axis()
+        plt.axis((min(self.distance),max(self.distance),self.reso_min,self.reso_max))
+        if self.reverse_distance:
+            plt.gca().invert_xaxis()
+        if self.is_EDC:
+            EDC_x=np.array([self.distance_EDC, self.distance_EDC])
+            EDC_y=np.array([self.melting_min, self.melting_max])
+            if self.EDC_line_dashed==True:
+                plt.plot(EDC_x, EDC_y, label='EDC ice core', color='r', linewidth=2, linestyle='--')
+            else:
+                plt.plot(EDC_x, EDC_y, label='EDC ice core', color='r', linewidth=2)
+        plotpara.yaxis.tick_left()
+        plotpara.yaxis.set_label_position('left')
+
+
         if self.reverse_distance:
             plt.gca().invert_xaxis()
         if self.is_NESW:
@@ -1409,6 +1522,8 @@ elif RL.opt_method=='MH1D':
         G0_accepted=np.array([RL.G0[j]])
         melt_accepted=np.array([RL.m[j]])
         pprime_accepted=np.array([RL.pprime[j]])
+        resolution_accepted=np.array([RL.age_density1dot5Myr])
+        height1dot5Myr_accepted=np.array([RL.height1dot5Myr])
         age_accepted=np.transpose(np.array([RL.age[:,j]]))  #FIXME: This does not work since the depth grid varies!
 
         agebot=RL.agebot[j]
@@ -1416,6 +1531,8 @@ elif RL.opt_method=='MH1D':
         G0=RL.G0[j]
         melt=RL.m[j]
         pprime=RL.pprime[j]
+        reso=RL.age_density1dot5Myr[j]
+        height=RL.height1dot5Myr[j]
         age=np.transpose(np.array([RL.age[:,j]]))
 
         for iter in range(RL.MHnbiter):
@@ -1429,6 +1546,8 @@ elif RL.opt_method=='MH1D':
                 G0_accepted=np.array([RL.G0[j]])
                 melt_accepted=np.array([RL.m[j]])
                 pprime_accepted=np.array([RL.pprime[j]])
+                resolution_accepted=np.array([RL.age_density1dot5Myr])
+                height1dot5Myr_accepted=np.array([RL.height1dot5Myr])
                 age_accepted=np.transpose(np.array([RL.age[:,j]]))
             RL.variables1Dtest=np.random.multivariate_normal(RL.variables1D,step)
 #            print RL.variables1Dtest[3],RL.invert_thk,RL.thkreal[j],RL.iso[-1,j]
@@ -1443,6 +1562,8 @@ elif RL.opt_method=='MH1D':
                     G0=RL.G0[j]
                     melt=RL.m[j]
                     pprime=RL.pprime[j]
+                    reso=RL.age_density1dot5Myr[j]
+                    height=RL.height1dot5Myr[j]
                     age=np.transpose(np.array([RL.age[:,j]]))
             
             variables1D_accepted=np.vstack((variables1D_accepted,RL.variables1D))
@@ -1452,13 +1573,34 @@ elif RL.opt_method=='MH1D':
             G0_accepted=np.append(G0_accepted,G0)
             melt_accepted=np.append(melt_accepted,melt)
             pprime_accepted=np.append(pprime_accepted,pprime)
+            resolution_accepted=np.append(resolution_accepted,reso)
+            height1dot5Myr_accepted=np.append(height1dot5Myr_accepted,height)
             age_accepted=np.hstack((age_accepted,age))
 #            print RL.variables1D
         RL.agebotmin[j]=np.percentile(agebot_accepted,15)
+        RL.agebotmax[j]=np.percentile(agebot_accepted,85)
+        RL.amin[j]=np.percentile(accu_accepted,15)
+        RL.amax[j]=np.percentile(accu_accepted,85)
+        RL.G0min[j]=np.percentile(G0_accepted,15)
+        RL.G0max[j]=np.percentile(G0_accepted,85)
+        RL.mmin[j]=np.percentile(melt_accepted,15)
+        RL.mmax[j]=np.percentile(melt_accepted,85)
+        RL.pprimemin[j]=np.percentile(pprime_accepted,15)
+        RL.pprimemax[j]=np.percentile(pprime_accepted,85)
+        RL.reso1dot5Myrmin[j]=np.percentile(np.where(np.isnan(resolution_accepted),0.,resolution_accepted),15)
+        RL.reso1dot5Myrmax[j]=np.percentile(np.where(np.isnan(resolution_accepted),0.,resolution_accepted),85)
+        RL.height1dot5Myrmin[j]=np.percentile(np.where(np.isnan(height1dot5Myr_accepted),0.,height1dot5Myr_accepted),15)
+        RL.height1dot5Myrmax[j]=np.percentile(np.where(np.isnan(height1dot5Myr_accepted),0.,height1dot5Myr_accepted),85)
+
+
         RL.sigma_a[j]=np.std(accu_accepted)
         RL.sigma_G0[j]=np.std(G0_accepted)
         RL.sigma_m[j]=np.std(melt_accepted)
         RL.sigma_pprime[j]=np.std(pprime_accepted)
+        RL.sigma_reso1dot5Myr=np.std(np.where(np.isnan(resolution_accepted),0.,resolution_accepted))
+        RL.sigma_height1dot5Myr=np.std(np.where(np.isnan(height1dot5Myr_accepted),0.,height1dot5Myr_accepted))
+
+        print 'sigmas',RL.sigma_reso1dot5Myr,RL.sigma_height1dot5Myr
         RL.sigma_age[:,j]=np.std(age_accepted, axis=1)
         print 'min age at 85%',RL.agebotmin[j]
         RL.variables1D=variables1D_accepted[np.argmin(cost_accepted),:]

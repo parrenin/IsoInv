@@ -100,7 +100,7 @@ for  i,RLlabel in enumerate(list_RL_extra):
 
 
 #
-list_maps=['resolution-1.5Myr','accu-steady','pprime', 'geothermal-heat-flux','melting','bottom-age','radar-lines','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','min-bottom-age','age-100m','age-150m','age-200m','age-250m', 'resolution-1Myr','resolution-1.2Myr','geothermal-heat-flux-sigma','pprime-sigma','accu-sigma']
+list_maps=['bottom-age','resolution-1.5Myr','accu-steady','pprime', 'geothermal-heat-flux','melting','radar-lines','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','min-bottom-age','age-100m','age-150m','age-200m','age-250m', 'resolution-1Myr','resolution-1.2Myr','geothermal-heat-flux-sigma','pprime-sigma','accu-sigma']
 list_length=len(list_maps)
 for i in range(nbiso):
     list_maps.append('accu-layer'+ "%02i"%(i+1) +'_'+str(int(iso_age[i]/1000.))+'-'+str(int(iso_age[i+1]/1000.))+'kyr' )
@@ -379,8 +379,8 @@ for i,MapLabel in enumerate(list_maps):
         lat=-75.32
         x,y=map1(lon,lat)
         plt.text(x,y,'LDCP',horizontalalignment='center',verticalalignment='center')
-        lon=123.8
-        lat=-74.95
+        lon=124.02
+        lat=-74.985
         x,y=map1(lon,lat)
         plt.text(x,y,'NP',horizontalalignment='center',verticalalignment='center')
 
@@ -407,8 +407,8 @@ for i,MapLabel in enumerate(list_maps):
         lat=-75.32
         x,y=map1(lon,lat)
         plt.text(x,y,'LDCP',horizontalalignment='center',verticalalignment='center')
-        lon=123.8
-        lat=-74.95
+        lon=124.02
+        lat=-74.985
         x,y=map1(lon,lat)
         plt.text(x,y,'NP',horizontalalignment='center',verticalalignment='center')
 
@@ -517,8 +517,8 @@ for i,MapLabel in enumerate(list_maps):
         lat=-75.32
         x,y=map1(lon,lat)
         plt.text(x,y,'LDCP',horizontalalignment='center',verticalalignment='center')
-        lon=123.8
-        lat=-74.95
+        lon=124.02
+        lat=-74.985
         x,y=map1(lon,lat)
         plt.text(x,y,'NP',horizontalalignment='center',verticalalignment='center')
 
@@ -575,8 +575,8 @@ for i,MapLabel in enumerate(list_maps):
         lat=-75.32
         x,y=map1(lon,lat)
         plt.text(x,y,'LDCP',horizontalalignment='center',verticalalignment='center')
-        lon=123.8
-        lat=-74.95
+        lon=124.02
+        lat=-74.985
         x,y=map1(lon,lat)
         plt.text(x,y,'NP',horizontalalignment='center',verticalalignment='center')
 
