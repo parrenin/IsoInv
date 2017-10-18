@@ -1365,6 +1365,18 @@ class RadarLine:
                 f.write('{0:11}'.format(str(self.LON_twtt[j]))+'\t'+'{0:12}'.format(str(self.LAT_twtt[j]))+'\t'+'{0:13}'.format(str(self.twtt0dot6Myr[j]))+'\t'+'{0:13}'.format(str(self.twtt0dot8Myr[j]))+'\t'+'{0:13}'.format(str(self.twtt1Myr[j]))+'\t'+'{0:13}'.format(str(self.twtt1dot2Myr[j]))+'\t'+'{0:13}'.format(str(self.twtt1dot5Myr[j]))+'\t'+'{0:13}'.format(str(self.twttBed[j]))+'\t'+current_folder_name+'\n')
 #            np.savetxt(f,np.transpose(output), delimiter="\t") 
 
+    def layer_depth_save(self):
+        output=np.vstack((self.LON, self.LAT, self.distance))
+        output=np.vstack((output, self.iso[0,:]/2))
+        output=np.vstack((output, (self.iso[:-1,:]+self.iso[1:,:])/2))
+        header='#LON\tLAT\tdistance(km)'
+        for i in range(self.nbiso):
+            header=header+'\tlayer_no_'+str(i+1)
+        header=header+'\n'
+        with open(self.label+'depthlayers.txt','w') as f:
+            f.write(header)
+            np.savetxt(f,np.transpose(output), delimiter="\t") 
+
 
     def EDC(self):
         f=interp1d(self.distance,self.age)
@@ -1634,4 +1646,5 @@ RL.bot_age_save()
 RL.hor_age_save()
 RL.iso_age_save()
 RL.twtt_save()
+RL.layer_depth_save()
 print 'Program execution time: ', time.time() - start_time, 'seconds' 
