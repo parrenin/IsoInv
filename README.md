@@ -14,11 +14,11 @@ A python model to invert isocrone observations in deep polar ice sheets
 
 * To run a single radar line (in spider):
 
-    run AgeModel.py radar_line_directory
+	run AgeModel.py radar_line_directory
 
 * To run a set of radar lines (in spider):
 
-    run Maps.py radar_lines_directory`
+	run Maps.py radar_lines_directory`
 
 # What is the structure of the directory containing all radar lines?
 
