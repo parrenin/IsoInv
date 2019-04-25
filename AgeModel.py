@@ -91,7 +91,6 @@ def interp1d_lin_aver_withoutnan(x,y):   #FIXME: there is a problem in this rout
     def f(xp):
         yp=np.empty(np.size(xp)-1)
         for i in range(np.size(xp)-1):
-#            print i, xp[i], xp[i+1]
             xmod=x[~(np.isnan(x)+np.isnan(y))]
             ymod=y[~(np.isnan(x)+np.isnan(y))]
             xmod2=xmod[np.where((xmod>xp[i])*(xmod<xp[i+1]))]
@@ -99,18 +98,13 @@ def interp1d_lin_aver_withoutnan(x,y):   #FIXME: there is a problem in this rout
             xmod3=np.concatenate((np.array([xp[i]]),xmod2,np.array([xp[i+1]])))
             g=interp1d(xmod,ymod, bounds_error=False, fill_value=np.nan)
             ymod3=np.concatenate((np.array([g(xp[i])]),ymod2,np.array([g(xp[i+1])])))
-#                print xmod3
-#                print ymod3
             if np.isnan(ymod3).all():
                 yp[i]=np.nan
             else:
                 xmod4=xmod3[np.where(~(np.isnan(ymod3)+np.isnan(xmod3)))]
                 ymod4=ymod3[np.where(~(np.isnan(ymod3)+np.isnan(xmod3)))]
-#                if i==9:
-#                    print xmod4,ymod4
                 yp[i]=np.sum((ymod4[1:]+ymod4[:-1])/2*(xmod4[1:]-xmod4[:-1]))
                 yp[i]=yp[i]/(xmod4[-1]-xmod4[0])
-#                print yp[i]
         return yp
     return f
 
@@ -123,7 +117,6 @@ def interp1d_lin_aver(x,y):   #FIXME: there is a problem in this routine when th
     def f(xp):
         yp=np.empty(np.size(xp)-1)
         for i in range(np.size(xp)-1):
-#            print i, xp[i], xp[i+1]
             xmod=x[~(np.isnan(x)+np.isnan(y))]
             ymod=y[~(np.isnan(x)+np.isnan(y))]
             xmod2=xmod[np.where((xmod>xp[i])*(xmod<xp[i+1]))]
@@ -131,18 +124,13 @@ def interp1d_lin_aver(x,y):   #FIXME: there is a problem in this routine when th
             xmod3=np.concatenate((np.array([xp[i]]),xmod2,np.array([xp[i+1]])))
             g=interp1d(x,y, bounds_error=False, fill_value=np.nan)
             ymod3=np.concatenate((np.array([g(xp[i])]),ymod2,np.array([g(xp[i+1])])))
-#                print xmod3
-#                print ymod3
             if np.isnan(ymod3).all():
                 yp[i]=np.nan
             else:
                 xmod4=xmod3[np.where(~(np.isnan(ymod3)+np.isnan(xmod3)))]
                 ymod4=ymod3[np.where(~(np.isnan(ymod3)+np.isnan(xmod3)))]
-#                if i==9:
-#                    print xmod4,ymod4
                 yp[i]=np.sum((ymod4[1:]+ymod4[:-1])/2*(xmod4[1:]-xmod4[:-1]))
                 yp[i]=yp[i]/(xmod4[-1]-xmod4[0])
-#                print yp[i]
         return yp
     return f
 
@@ -164,15 +152,15 @@ class RadarLine:
         self.nbhor=0
 
         #definition of some global parameters
-        execfile(self.label+'../parameters-AllRadarLines.py')
+        exec(open(self.label+'../parameters-AllRadarLines.py').read())
         filename=self.label+'parameters.py'
         if os.path.isfile(filename):
-            execfile(filename)
+            exec(open(filename).read())
 
 
         #Reading the radar dataset
         nbcolumns=6+self.nbiso+self.is_bedelev+self.is_trace+self.nbhor
-        print 'nbcolumns:',nbcolumns
+        print('nbcolumns:',nbcolumns)
         readarray=np.loadtxt(self.label+'radar-data.txt', usecols=range(nbcolumns))
         if readarray[0,4]>readarray[-1,4]:
             readarray=readarray[::-1,:]
@@ -201,7 +189,7 @@ class RadarLine:
 #            toto=self.distance_raw[-1]-self.distance_end
 #            self.distance_end=self.distance_raw[-1]-self.distance_start
 #            self.distance_start=toto+0.
-##            print self.distance_start, self.distance_end
+##            print(self.distance_start, self.distance_end)
 #            self.distance_raw=self.distance_raw[-1]-self.distance_raw
 #            self.LON_raw=self.LON_raw[::-1]
 #            self.LAT_raw=self.LAT_raw[::-1]
@@ -230,11 +218,10 @@ class RadarLine:
         elif self.interp_method=='lin_aver':
             f=interp1d_lin_aver_withoutnan(self.distance_raw,self.thk_raw)    #TODO: the input function is not a staircase one
         else:
-            print 'interpolation method not recognized'
+            print('interpolation method not recognized')
             quit()
         self.thkreal=f(np.concatenate((self.distance-self.resolution/2, np.array([self.distance[-1]+self.resolution/2]))))
         self.thk=self.thkreal+0
-#        print 'Interpolation of bedrock: done.'
         self.iso=np.zeros((self.nbiso,np.size(self.distance)))
         self.hor=np.zeros((self.nbhor,np.size(self.distance)))
         self.iso_modage=np.empty_like(self.iso)
@@ -250,10 +237,10 @@ class RadarLine:
             elif self.interp_method=='lin_aver':
                 f=interp1d_lin_aver(self.distance_raw,self.iso_raw[i,:])
             else:
-                print 'interpolation method not recognized'
+                print('interpolation method not recognized')
                 quit()
             self.iso[i,:]=f(np.concatenate((self.distance-self.resolution/2, np.array([self.distance[-1]+self.resolution/2]))))
-#            print 'Interpolation of isochrone no: ',i,': done.'
+
 
         for i in range(self.nbhor):
             if self.interp_method=='stair_aver':
@@ -261,7 +248,7 @@ class RadarLine:
             elif self.interp_method=='lin_aver':
                 f=interp1d_lin_aver(self.distance_raw,self.hor_raw[i,:])
             else:
-                print 'interpolation method not recognized'
+                print('interpolation method not recognized')
                 quit()
             self.hor[i,:]=f(np.concatenate((self.distance-self.resolution/2, np.array([self.distance[-1]+self.resolution/2]))))
 
@@ -289,12 +276,11 @@ class RadarLine:
 
 #        self.AICC2012_steadyage=np.cumsum(np.concatenate((np.array([self.AICC2012_age[0]]),(self.AICC2012_age[1:]-self.AICC2012_age[:-1])*self.AICC2012_accu[:-1]/(self.AICC2012_iedepth[1:]-self.AICC2012_iedepth[:-1])/self.AICC2012_accu[0]*(self.AICC2012_depth[1:]-self.AICC2012_depth[:-1]))))
         self.AICC2012_averageaccu=np.sum((self.AICC2012_age[1:]-self.AICC2012_age[:-1])*self.AICC2012_accu[:-1])/(self.AICC2012_age[-1]-self.AICC2012_age[0])
-        print 'average accu: ',self.AICC2012_averageaccu
+        print('average accu: ',self.AICC2012_averageaccu)
         self.AICC2012_steadyage=np.cumsum(np.concatenate((np.array([self.AICC2012_age[0]]),(self.AICC2012_age[1:]-self.AICC2012_age[:-1])*self.AICC2012_accu[:-1]/self.AICC2012_averageaccu)))
 #        self.AICC2012_steadyage=self.AICC2012_steadyage*self.AICC2012_age[-1]/self.AICC2012_steadyage[-1]
-        print 'steady/unsteady ratio: ', self.AICC2012_steadyage[-1]/self.AICC2012_age[-1]
+        print('steady/unsteady ratio: ', self.AICC2012_steadyage[-1]/self.AICC2012_age[-1])
 
-#        print 'prior value on melting',self.m_EDC
 
         if (self.is_EDC and self.calc_isoage):
 #        if self.is_EDC:
@@ -428,7 +414,6 @@ class RadarLine:
 
         #depth grids
         self.thkie[j]=np.interp(self.thk[j],np.concatenate((self.AICC2012_depth,np.array([self.AICC2012_depth[-1]+3000]))),np.concatenate((self.AICC2012_iedepth,np.array([self.AICC2012_iedepth[-1]+3000]))))
-#        print np.shape(self.zeta[:,j])
         self.depth[:,j]=self.thk[j]*(1-self.zeta[:,j])
         self.depthie[:,j]=np.interp(self.depth[:,j],np.concatenate((self.AICC2012_depth,np.array([self.AICC2012_depth[-1]+3000]))),np.concatenate((self.AICC2012_iedepth,np.array([self.AICC2012_iedepth[-1]+3000]))))
         self.zetaie[:,j]=(self.thkie[j]-self.depthie[:,j])/self.thkie[j]
@@ -579,7 +564,6 @@ class RadarLine:
         var=variables1D
         self.a[j]=var[0]
         var=np.delete(var,[0])
-#        print 'a: ',self.a[j]
 #        self.m=variables[np.size(self.distance):2*np.size(self.distance)]
         self.pprime[j]=var[0]
         var=np.delete(var,[0])
@@ -592,11 +576,7 @@ class RadarLine:
 
         self.model1D(j)
         f=interp1d(self.depth[:,j],self.age[:,j])  #Is this useful?
-#        print self.age[:,j]
-#        print self.iso_modage[:,j]
-#        print 'shape iso_age and iso_sigma:', np.shape(self.iso_age),np.shape(self.iso_sigma)
         resi=(self.iso_age.flatten()-self.iso_modage[:,j])/self.iso_sigma.flatten()
-#        print resi
         resi=resi[np.where(~np.isnan(resi))]
         resi=np.concatenate((resi,np.array([ (self.pprime[j]-self.pprime_prior)/self.pprime_sigma ]) ))
         if self.invert_G0:
@@ -604,7 +584,6 @@ class RadarLine:
 #        resi=np.append(resi,(self.pprime[j]-self.pprime_prior)/self.pprime_sigma)
 #        if self.invert_G0:
 #            resi=np.append(resi,(self.G0[j]-self.G0_prior)/self.G0_sigma)
-#        print 'Residual: ',resi
         return resi
 
     def cost_fct(self, variables1D, j):
@@ -719,7 +698,6 @@ class RadarLine:
         index=index+1
         c_model=np.dot(np.transpose(jacob[:,index:index+np.size(self.age[:,j])]),np.dot(self.hess1D,jacob[:,index:index+np.size(self.age[:,j])]))
         self.sigma_age[:,j]=np.sqrt(np.diag(c_model))
-#        print np.size(self.sigma_age)
         index=index+np.size(self.age[:,j])
         c_model=np.dot(np.transpose(jacob[:,index:index+np.size(self.age[1:,j])]),np.dot(self.hess1D,jacob[:,index:index+np.size(self.age[1:,j])]))
         self.sigma_logage[1:,j]=np.sqrt(np.diag(c_model))
@@ -749,7 +727,6 @@ class RadarLine:
         index=index+np.size(self.p)
         c_model=np.dot(np.transpose(jacob[:,index:index+np.size(self.age)]),np.dot(self.hess,jacob[:,index:index+np.size(self.age)]))
         self.sigma_age=np.sqrt(np.diag(c_model))
-#        print np.size(self.sigma_age)
         self.sigma_age=np.reshape(self.sigma_age,(np.size(self.zetagrid),np.size(self.distance)))
         index=index+np.size(self.age)
         c_model=np.dot(np.transpose(jacob[:,index:index+np.size(self.G0)]),np.dot(self.hess,jacob[:,index:index+np.size(self.G0)]))
@@ -912,7 +889,6 @@ class RadarLine:
         norm=Normalize(vmin=-5000, vmax=5000)
         for i in range(self.nbiso):
             colorscatter=self.iso_modage[i,:]-self.iso_age[i]
-#            print i, np.shape(colorscatter),np.shape(self.iso[i,:]),colorscatter
             if i==0:
                 sc=plt.scatter(self.distance, self.iso[i,:], c=colorscatter, label='obs. isochrones', s=7, edgecolor='', norm=norm)
             else:
@@ -933,7 +909,7 @@ class RadarLine:
             plt.xlabel('distance (km)')
         plt.ylabel('depth (m)')
         if self.is_legend:
-            print 'test'
+            print('test')
             leg=plt.legend(loc=1)
             frame=leg.get_frame()
             frame.set_facecolor('0.75')
@@ -1078,7 +1054,7 @@ class RadarLine:
 
 
 #        fig = plt.figure('Accumulation history')
-        lines=[zip(self.distance, 917*self.accu_layer[i,:]) for i in range(self.nbiso)]
+        lines=[list(zip(self.distance, 917*self.accu_layer[i,:])) for i in range(self.nbiso)]
         z=(self.iso_age.flatten()[1:]+self.iso_age.flatten()[:-1])/2
         z=np.concatenate(( np.array([(self.age_surf+self.iso_age.flatten()[0])/2]) , z ))
         fig, ax = plt.subplots()
@@ -1334,7 +1310,7 @@ class RadarLine:
             f.write(header)
             np.savetxt(f,np.transpose(output), delimiter="\t") 
         for i in range(self.nbhor):
-            print 'horizon no:',i+1,', average age: ',np.nanmean(self.hor_modage[i,:]),', stdev age: ',np.nanstd(self.hor_modage[i,:])
+            print('horizon no:',i+1,', average age: ',np.nanmean(self.hor_modage[i,:]),', stdev age: ',np.nanstd(self.hor_modage[i,:]))
 
     def iso_age_save(self):
         output=np.vstack((self.LON, self.LAT, self.distance, self.iso_modage, self.iso_modage_sigma))
@@ -1348,17 +1324,14 @@ class RadarLine:
             f.write(header)
             np.savetxt(f,np.transpose(output), delimiter="\t") 
         for i in range(self.nbiso):
-            print 'isochrone no:',i+1,', average age: ',np.nanmean(self.iso_modage[i,:]),', stdev age: ',np.nanstd(self.iso_modage[i,:])
+            print('isochrone no:',i+1,', average age: ',np.nanmean(self.iso_modage[i,:]),', stdev age: ',np.nanstd(self.iso_modage[i,:]))
 
 
     def twtt_save(self):
 #        b=np.chararray((np.size(self.distance)), itemsize=20)
 #        b[:]=RLlabel
-#        print b
-#        print self.LON
 #        output=np.vstack((self.LON_twtt,self.LAT_twtt,self.twtt1Myr))
         current_folder_path, current_folder_name = os.path.split(RL.label[:-1])
-#        print 'folder: ',RL.label,current_folder_name
         with open(self.label+'twtt.txt','w') as f:
             f.write('#LON\tLAT\ttwtt-0.6Myr(lk)\ttwtt-0.8Myr(lk)\ttwtt-1Myr(lk)\ttwtt-1.2Myr(lk)\ttwtt-1.5Myr(lk)\tself.twttBed(lk)\tLabel\n')
             for j in range(np.size(self.distance)):
@@ -1385,21 +1358,21 @@ class RadarLine:
         sigmaage_EDC=g(self.distance_EDC)
         h=interp1d(self.distance,self.depth)
         depth_EDC=h(self.distance_EDC)
-        print 'Thickness at EDC is:',depth_EDC[-1]
+        print('Thickness at EDC is:',depth_EDC[-1])
         i=interp1d(depth_EDC,age_EDC)
         age_EDC_bot=i(max(depth_EDC)-60)
         j=interp1d(depth_EDC,sigmaage_EDC)
         sigmaage_EDC_bot=j(max(depth_EDC)-60)
-        print 'Age at EDC at 3200 m depth is: ',age_EDC_bot,'+-',sigmaage_EDC_bot
+        print('Age at EDC at 3200 m depth is: ',age_EDC_bot,'+-',sigmaage_EDC_bot)
         f=interp1d(self.distance,self.p)
         p_EDC=f(self.distance_EDC)
-        print 'p parameter at EDC is: ', p_EDC
+        print('p parameter at EDC is: ', p_EDC)
         f=interp1d(self.distance,self.a)
         a_EDC=f(self.distance_EDC)
-        print 'accumulation at EDC is: ', a_EDC
+        print('accumulation at EDC is: ', a_EDC)
         f=interp1d(self.distance,self.m)
         m_EDC=f(self.distance_EDC)
-        print 'melting at EDC is: ', m_EDC
+        print('melting at EDC is: ', m_EDC)
 
         readarray=np.loadtxt(self.label+'temperatures_EDC.txt')
         datatempEDC_depth=readarray[:,0]
@@ -1430,8 +1403,8 @@ class RadarLine:
 #        g=interp1d(self.distance_raw,self.LAT_raw)
 #        self.LONagemax=f(self.distanceagemax)
 #        self.LATagemax=g(self.distanceagemax)
-#        print 'Maximum age is ',self.agemax,'+-',self.sigmaagemax
-#        print 'It occurs at a distance of ',self.distanceagemax,' km, with coordinates ',self.LONagemax,', ',self.LATagemax        
+#        print('Maximum age is ',self.agemax,'+-',self.sigmaagemax)
+#        print('It occurs at a distance of ',self.distanceagemax,' km, with coordinates ',self.LONagemax,', ',self.LATagemax)       
 
 
 
@@ -1441,15 +1414,15 @@ class RadarLine:
 RLlabel=sys.argv[1]
 if RLlabel[-1]!='/':
     RLlabel=RLlabel+'/'
-print 'Radar line is: ',RLlabel
-print 'Creation of the radar line'
+print('Radar line is: ',RLlabel)
+print('Creation of the radar line')
 RL=RadarLine(RLlabel)
-print 'Initialization of radar line'
+print('Initialization of radar line')
 RL.init()
-print 'Data display'
+print('Data display')
 RL.data_display()
 if RL.opt_method=='leastsq':
-    print 'Optimization by leastsq'
+    print('Optimization by leastsq')
     RL.variables=np.concatenate((RL.a,RL.pprime))
     if RL.invert_G0:
         RL.variables=np.concatenate((RL.variables,RL.G0))
@@ -1457,9 +1430,9 @@ if RL.opt_method=='leastsq':
         RL.variables=np.concatenate((RL.variables,RL.thk))
 #        self.variables=np.concatenate((self.a,self.m,self.s))
     RL.variables,RL.hess,infodict,mesg,ier=leastsq(RL.residuals, RL.variables, full_output=1)
-    print mesg
+    print(mesg)
     RL.residuals(RL.variables)
-    print 'Calculation of confidence intervals'
+    print('Calculation of confidence intervals')
     if RL.calc_sigma==False:
         RL.hess=np.zeros((np.size(RL.variables),np.size(RL.variables)))
     RL.sigma()
@@ -1469,10 +1442,10 @@ elif RL.opt_method=='none':
         RL.variables=np.concatenate((RL.variables,RL.G0))
     if RL.invert_thk:
         RL.variables=np.concatenate((RL.variables,RL.thk))
-    print 'No optimization'
+    print('No optimization')
     RL.residuals(RL.variables)
 elif RL.opt_method=='none1D':
-    print 'Forward model 1D'
+    print('Forward model 1D')
     for j in range(np.size(RL.distance)):
         RL.variables1D=np.array([RL.a[j],RL.pprime[j]])
         if RL.invert_G0:
@@ -1481,10 +1454,10 @@ elif RL.opt_method=='none1D':
             RL.variables1D=np.append(RL.variables1D,RL.thk[j])
         RL.residuals1D(RL.variables1D,j)
 elif RL.opt_method=='leastsq1D':
-    print 'Optimization by leastsq1D'    
+    print('Optimization by leastsq1D')   
     for j in range(np.size(RL.distance)):
 #        if RL.thk[j]<>np.nan and 
-        print 'index along the radar line: ', j
+        print('index along the radar line: ', j)
         RL.variables1D=np.array([RL.a[j],RL.pprime[j]])
         if RL.invert_G0:
             RL.variables1D=np.append(RL.variables1D,RL.G0[j])
@@ -1497,9 +1470,9 @@ elif RL.opt_method=='leastsq1D':
         RL.sigma1D(j)
     RL.agebotmin=RL.agebot-RL.sigmabotage
 elif RL.opt_method=='MH1D':
-    print 'Optimization by MH1D'    
+    print('Optimization by MH1D')   
     for j in range(np.size(RL.distance)):
-        print 'index along the radar line: ', j
+        print('index along the radar line: ', j)
         RL.variables1D=np.array([RL.a[j],RL.pprime[j]])
         if RL.invert_G0:
             RL.variables1D=np.append(RL.variables1D,RL.G0[j])
@@ -1509,7 +1482,7 @@ elif RL.opt_method=='MH1D':
         step=RL.hess1D
         if RL.invert_G0 and RL.invert_thk and RL.variables1D[3]>RL.thkreal[j]:
             RL.variables1D[3]=RL.thkreal[j]
-            print 'thk > threal in the leastsq solution'
+            print('thk > threal in the leastsq solution')
 #        step=np.diag(np.array([0.001, 0.1, 0.001, 10.])**2)
 #        cost_accepted=np.array([])
 #        variables1D_accepted=np.array([np.empty_like(RL.variables1D)])
@@ -1612,9 +1585,9 @@ elif RL.opt_method=='MH1D':
         RL.sigma_reso1dot5Myr=np.std(np.where(np.isnan(resolution_accepted),0.,resolution_accepted))
         RL.sigma_height1dot5Myr=np.std(np.where(np.isnan(height1dot5Myr_accepted),0.,height1dot5Myr_accepted))
 
-        print 'sigmas',RL.sigma_reso1dot5Myr,RL.sigma_height1dot5Myr
+        print('sigmas',RL.sigma_reso1dot5Myr,RL.sigma_height1dot5Myr)
         RL.sigma_age[:,j]=np.std(age_accepted, axis=1)
-        print 'min age at 85%',RL.agebotmin[j]
+        print('min age at 85%',RL.agebotmin[j])
         RL.variables1D=variables1D_accepted[np.argmin(cost_accepted),:]
 #        print variables1D_accepted
 #        print cost_accepted
@@ -1623,9 +1596,9 @@ elif RL.opt_method=='MH1D':
 
 
 else:
-    print RL.opt_method,': Optimization method not recognized.'
+    print(RL.opt_method,': Optimization method not recognized.')
     quit()
-print 'calculating per layer accumulations'
+print('calculating per layer accumulations')
 #RL.model()
 
 RL.accu_layers()
@@ -1634,9 +1607,9 @@ RL.accu_layers()
 
 
 
-print 'Model display'
+print('Model display')
 RL.model_display()
-print 'parameters display'
+print('parameters display')
 RL.parameters_display()
 RL.parameters_save()
 if RL.is_EDC:
@@ -1647,4 +1620,4 @@ RL.hor_age_save()
 RL.iso_age_save()
 RL.twtt_save()
 RL.layer_depth_save()
-print 'Program execution time: ', time.time() - start_time, 'seconds' 
+print('Program execution time: ', time.time() - start_time, 'seconds') 

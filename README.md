@@ -44,6 +44,7 @@ AgeModel.py creates a set of text files containing numerical outputs and pdf fil
 * ageisochrones.txt: Average ages of isochrones as calculated by the model.
 * agehorizons.txt: Average ages of the non dated horizons as calculated by the model.
 * twtt.txt: Two way travel time of a set of horizons dated by the model, to compare with radar data.
+
 * Data.pdf: Radar data along the profile (isochrones and bedrock).
 * Model.pdf: Modeled age of the ice along the radar profile, as well as observed isochrones.
 * Model-steady.pdf: Modeled steady age of the ice along the radar profile, as well as observed isochrones.
