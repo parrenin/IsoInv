@@ -6,7 +6,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 RLlabel=sys.argv[1]
 if RLlabel[-1]!='/':
     RLlabel=RLlabel+'/'
-print 'Radar line is: ',RLlabel
+print('Radar line is: ',RLlabel)
 
 #Reading the AICC2012 dataset, calculation of steady age and interpolation
 readarray=np.loadtxt(RLlabel+'/AICC2012.txt')
