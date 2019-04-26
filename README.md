@@ -14,11 +14,11 @@ A python model to invert isocrone observations in deep polar ice sheets
 
 * To run a single radar line (in spider):
 
-	`run AgeModel.py radar_line_directory`
+	`run age_model.py radar_line_directory`
 
 * To run a set of radar lines (in spider):
 
-	`run Maps.py radar_lines_directory`
+	`run maps.py radar_lines_directory`
 
 # What is the structure of the directory containing all radar lines?
 
@@ -32,7 +32,7 @@ A python model to invert isocrone observations in deep polar ice sheets
 * parameters.py (OPT): python file containing various pramaters for the radar line. This file is optional since these parameters can be defined in the the directory upstream for all radar lines in the parameters-AllRadarLines.py file.
 * ages.txt (OPT): text file with a list of ages for the isochronal layers: column1=ages, column2=sigma of ages. You can also define this file in the directory upstream for all radar lines.
 
-# What is the output of AgeModel.py?
+# What is the output of age_model.py?
 
 AgeModel.py creates a set of text files containing numerical outputs and pdf files containing graphs.
 
