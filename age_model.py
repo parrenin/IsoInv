@@ -876,8 +876,9 @@ class RadarLine:
 
     def model_display(self):
 
-        fig = plt.figure('Model steady')
-        plotmodel = fig.add_subplot(111, aspect=self.aspect)
+#        fig = plt.figure('Model steady')
+        fig, plotmodel = plt.subplots()
+        plotmodel.set_aspect(self.aspect)
         plt.plot(self.distance, self.thkreal, label='obs. bedrock', color='k', linewidth=2)
         plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
         for i in range(self.nbiso):
@@ -921,12 +922,12 @@ class RadarLine:
         if self.reverse_distance:
             plt.gca().invert_xaxis()
         pp = PdfPages(self.label+'Model-steady.pdf')
-        pp.savefig(plt.figure('Model steady'))
+        pp.savefig(fig)
         pp.close()
 
 
-        fig = plt.figure('Model')
-        plotmodel = fig.add_subplot(111, aspect=self.aspect)
+        fig, plotmodel = plt.subplots()
+        plotmodel.set_aspect(self.aspect)
         plt.plot(self.distance, self.thkreal, color='k', linewidth=2, label='bed')
         plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
 #        plt.legend(loc=1)
@@ -977,11 +978,11 @@ class RadarLine:
         if self.settick == 'manual':
             plotmodel.set_xticks(np.arange(self.min_tick, self.max_tick+1., self.delta_tick))
         pp = PdfPages(self.label+'Model.pdf')
-        pp.savefig(plt.figure('Model'))
+        pp.savefig(fig)
         pp.close()
 
-        fig = plt.figure('Age misfit')
-        plotmodel = fig.add_subplot(111, aspect=self.aspect)
+        fig, plotmodel = plt.subplots()
+        plotmodel.set_aspect(self.aspect)
         plt.plot(self.distance, self.thkreal, color='k', linewidth=2)
         plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
         norm = Normalize(vmin=-5000, vmax=5000)
@@ -1025,12 +1026,12 @@ class RadarLine:
         if self.settick == 'manual':
             plotmodel.set_xticks(np.arange(self.min_tick, self.max_tick+1., self.delta_tick))
         pp = PdfPages(self.label+'AgeMisfit.pdf')
-        pp.savefig(plt.figure('Age misfit'))
+        pp.savefig(fig)
         pp.close()
 
 
-        fig = plt.figure('Model confidence interval')
-        plotmodelci = fig.add_subplot(111, aspect=self.aspect)
+        fig, plotmodelci = plt.subplots()
+        plotmodelci.set_aspect(self.aspect)
         plt.plot(self.distance, self.thkreal, color='k', linewidth=2)
         plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
         for i in range(self.nbiso):
@@ -1085,7 +1086,7 @@ class RadarLine:
         if self.settick == 'manual':
             plotmodelci.set_xticks(np.arange(self.min_tick, self.max_tick+1., self.delta_tick))
         pp = PdfPages(self.label+'Model-confidence-interval.pdf')
-        pp.savefig(plt.figure('Model confidence interval'))
+        pp.savefig(fig)
         pp.close()
 
 
