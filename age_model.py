@@ -202,12 +202,13 @@ class RadarLine:
 
         #definition of some global parameters
 #        exec(open(self.label+'../parameters-AllRadarLines.py').read())
-        data = yaml.load(open(self.label+'../parameters_all_radar_lines.yml').read())
+        data = yaml.load(open(self.label+'../parameters_all_radar_lines.yml').read(),
+                         Loader=yaml.FullLoader)
         if data != None:
             self.__dict__.update(data)
         filename = self.label+'parameters.yml'
         if os.path.isfile(filename):
-            data = yaml.load(open(filename).read())
+            data = yaml.load(open(filename).read(), Loader=yaml.FullLoader)
             if data != None:
                 self.__dict__.update(data)
 
