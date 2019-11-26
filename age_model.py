@@ -828,7 +828,7 @@ class RadarLine:
 
 #Plotting the raw and interpolated radar datasets
     def data_display(self):
-        plt.figure('Data')
+        fig = plt.figure('Data')
         plt.plot(self.distance_raw, self.thk_raw, label='raw bedrock', color='0.5', linewidth=2)
         plt.plot(self.distance, self.thk, label='interpolated bedrock', color='k', linewidth=2)
         for i in range(self.nbiso):
@@ -871,6 +871,7 @@ class RadarLine:
         pp = PdfPages(self.label+'Data.pdf')
         pp.savefig(plt.figure('Data'))
         pp.close()
+        plt.close(fig)
 
 #Plot of the model results
 
@@ -924,6 +925,7 @@ class RadarLine:
         pp = PdfPages(self.label+'Model-steady.pdf')
         pp.savefig(fig)
         pp.close()
+        plt.close(fig)
 
 
         fig, plotmodel = plt.subplots()
@@ -980,6 +982,8 @@ class RadarLine:
         pp = PdfPages(self.label+'Model.pdf')
         pp.savefig(fig)
         pp.close()
+        plt.close(fig)
+
 
         fig, plotmodel = plt.subplots()
         plotmodel.set_aspect(self.aspect)
@@ -1028,6 +1032,7 @@ class RadarLine:
         pp = PdfPages(self.label+'AgeMisfit.pdf')
         pp.savefig(fig)
         pp.close()
+        plt.close(fig)
 
 
         fig, plotmodelci = plt.subplots()
@@ -1088,6 +1093,7 @@ class RadarLine:
         pp = PdfPages(self.label+'Model-confidence-interval.pdf')
         pp.savefig(fig)
         pp.close()
+        plt.close(fig)
 
 
         plt.figure('Thinning')
@@ -1127,6 +1133,7 @@ class RadarLine:
         pp = PdfPages(self.label+'Thinning.pdf')
         pp.savefig(plt.figure('Thinning'))
         pp.close()
+        plt.close(fig)
 
         fig = plt.figure('Temperature')
         plt.plot(self.distance, self.thkreal, label='obs. bedrock', color='k', linewidth=2)
@@ -1152,7 +1159,7 @@ class RadarLine:
         pp = PdfPages(self.label+'Temperature.pdf')
         pp.savefig(plt.figure('Temperature'))
         pp.close()
-#        plt.close(fig)
+        plt.close(fig)
 
 
 
@@ -1178,14 +1185,14 @@ class RadarLine:
         pp = PdfPages(self.label+'AccumulationHistory.pdf')
         pp.savefig(fig)
         pp.close()
-#        plt.close(fig)
+        plt.close(fig)
 
 
 
 #Plot of the parameters
 
     def parameters_display(self):
-        f = plt.figure('Parameters')
+        fig = plt.figure('Parameters')
 #        f = plt.figure('Parameters', figsize=(4, 6))
 
         plotpara = plt.subplot(711,
@@ -1366,25 +1373,27 @@ class RadarLine:
         else:
             plt.xlabel('distance (km)')
 #        plt.legend()
-        f.subplots_adjust(hspace=0)
-        plt.setp([a.get_xticklabels() for a in f.axes[:-1]], visible=False)
+        fig.subplots_adjust(hspace=0)
+        plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
         pp = PdfPages(self.label+'Parameters.pdf')
         pp.savefig(plt.figure('Parameters'))
         pp.close()
+        plt.close(fig)
 
         if self.invert_G0:
-            plt.figure('Geothermal heat flux')
+            fig = plt.figure('Geothermal heat flux')
             plt.plot(self.distance, self.G0*1000, label='G0', color='k')
             plt.plot(self.distance, (self.G0-self.sigma_G0)*1000, color='k', linestyle='--')
             plt.plot(self.distance, (self.G0+self.sigma_G0)*1000, color='k', linestyle='--')
             plt.ylabel('$G_0$ (mW/m$^2$)')
-        if self.reverse_distance:
-            plt.gca().invert_xaxis()
+            if self.reverse_distance:
+                plt.gca().invert_xaxis()
 #            plt.yaxis.tick_right()
 #            plt.yaxis.set_label_position('right')
             pp = PdfPages(self.label+'GeothermalHeatFlux.pdf')
-            pp.savefig(plt.figure('Geothermal heat flux'))
+            pp.savefig(fig)
             pp.close()
+            plt.close(fig)
 
 
     def parameters_save(self):
