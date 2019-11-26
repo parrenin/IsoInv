@@ -18,7 +18,7 @@ from scipy.special import erf
 import yaml
 
 ###Registration of start time
-start_time = time.time()
+START_TIME = time.time()
 
 
 
@@ -80,8 +80,7 @@ def interp1d_stair_aver_withnan(x, y):   #TODO: deal with the case x not sorted
              (xp[1:]-xp[:-1]), np.nan) #Maybe this is suboptimal since we compute twice g(xp[i])
         for i in range(np.size(xp)-1):
             if np.isnan(y[np.where((x >= xp[i])*(x < xp[i+1]))]).all():
-#                yp[i] = np.nan
-                setattr(yp, i, np.nan)
+                yp[i] = np.nan
                 return yp
 
     return f
@@ -144,7 +143,7 @@ class RadarLine:
 
     def __init__(self, label):
         self.label = label
-        
+
     def init(self):
         self.is_bedelev = False
         self.is_trace = False
@@ -163,7 +162,7 @@ class RadarLine:
         self.distance_EDC = 0.
         self.age_surf = -50.
         self.dzeta = 0.01
-        self.tm_iter= 5
+        self.tm_iter = 5
         self.Ts = 212.74
         self.p_prior = 2
         self.p_sigma = 5
@@ -196,6 +195,10 @@ class RadarLine:
         self.MHnbiter = 3000
         self.MHiter_adapt1 = 1000
         self.MHiter_adapt2 = -1
+        self.accu_step = 0.001
+        self.p_step = 0.5
+        self.G0_step = 0.002
+        self.thick_step = 10.
 
         #definition of some global parameters
 #        exec(open(self.label+'../parameters-AllRadarLines.py').read())
@@ -1527,6 +1530,11 @@ class RadarLine:
         pp.savefig(plt.figure('Temperature at EDC'))
         pp.close()
 
+        output = np.vstack((depth_EDC, age_EDC, temp_EDC))
+        header = 'depth\tage\ttemperature\n'
+        with open(self.label+'EDCresults.txt', 'w') as f:
+            f.write(header)
+            np.savetxt(f, np.transpose(output), delimiter="\t")
 
 #Main
 RLlabel = sys.argv[1]
@@ -1584,7 +1592,7 @@ elif RL.opt_method == 'leastsq1D':
                                                                  args=(j), full_output=1)
         RL.residuals1D(RL.variables1D, j)
         if not RL.calc_sigma:
-          RL.hess1D = np.zeros((np.size(RL.variables1D), np.size(RL.variables1D)))
+            RL.hess1D = np.zeros((np.size(RL.variables1D), np.size(RL.variables1D)))
         RL.sigma1D(j)
     RL.agebotmin = RL.agebot-RL.sigmabotage
 elif RL.opt_method == 'MH1D':
@@ -1592,16 +1600,20 @@ elif RL.opt_method == 'MH1D':
     for j in range(np.size(RL.distance)):
         print('index along the radar line: ', j)
         RL.variables1D = np.array([RL.a[j], RL.p[j]])
+        step = np.array([RL.accu_step, RL.p_step])
         if RL.invert_G0:
             RL.variables1D = np.append(RL.variables1D, RL.G0[j])
+            step = np.append(step, RL.G0_step)
         if RL.invert_thk:
             RL.variables1D = np.append(RL.variables1D, RL.thk[j])
-        RL.variables1D, RL.hess1D, infodict, mesg, ier = leastsq(RL.residuals1D, RL.variables1D,
-                                                                 args=(j), full_output=1)
-        step = RL.hess1D
-        if RL.invert_G0 and RL.invert_thk and RL.variables1D[3] > RL.thkreal[j]:
-            RL.variables1D[3] = RL.thkreal[j]
-            print('thk > threal in the leastsq solution')
+            step = np.append(step, RL.thick_step)
+        step = np.diag(step**2)
+#        RL.variables1D, RL.hess1D, infodict, mesg, ier = leastsq(RL.residuals1D, RL.variables1D,
+#                                                                 args=(j), full_output=1)
+#        step = RL.hess1D
+#        if RL.invert_G0 and RL.invert_thk and RL.variables1D[3] > RL.thkreal[j]:
+#            RL.variables1D[3] = RL.thkreal[j]
+#            print('thk > threal in the leastsq solution')
         cost = RL.cost_fct(RL.variables1D, j)
 
         cost_accepted = np.array([cost])
@@ -1625,9 +1637,9 @@ elif RL.opt_method == 'MH1D':
         height = RL.height1dot5Myr[j]
         age = np.transpose(np.array([RL.age[:, j]]))
 
-        for iter in range(RL.MHnbiter):
+        for it in range(RL.MHnbiter):
 #            print 'iteration no:', iter
-            if iter == RL.MHiter_adapt1 or iter == RL.MHiter_adapt2:
+            if it == RL.MHiter_adapt1 or it == RL.MHiter_adapt2:
                 step = np.cov(np.transpose(variables1D_accepted))
                 cost_accepted = np.array([cost])
                 variables1D_accepted = np.array([RL.variables1D])
@@ -1697,7 +1709,7 @@ elif RL.opt_method == 'MH1D':
         RL.sigma_height1dot5Myr = np.std(np.where(np.isnan(height1dot5Myr_accepted), 0.,
                                                   height1dot5Myr_accepted))
 
-        print('sigmas', RL.sigma_reso1dot5Myr, RL.sigma_height1dot5Myr)
+#        print('sigmas', RL.sigma_reso1dot5Myr, RL.sigma_height1dot5Myr)
         RL.sigma_age[:, j] = np.std(age_accepted, axis=1)
         print('min age at 85%', RL.agebotmin[j])
         RL.variables1D = variables1D_accepted[np.argmin(cost_accepted), :]
@@ -1718,14 +1730,14 @@ RL.accu_layers()
 print('Model display')
 RL.model_display()
 print('parameters display')
-RL.parameters_display()
-RL.parameters_save()
 if RL.is_EDC:
     RL.EDC()
+RL.parameters_display()
+RL.parameters_save()
 #RL.max_age()
 RL.bot_age_save()
 RL.hor_age_save()
 RL.iso_age_save()
 RL.twtt_save()
 RL.layer_depth_save()
-print('Program execution time: ', time.time() - start_time, 'seconds')
+print('Program execution time: ', time.time() - START_TIME, 'seconds')
