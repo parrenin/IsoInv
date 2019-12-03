@@ -1,10 +1,10 @@
-from mpl_toolkits.basemap import Basemap, cm
-from matplotlib.backends.backend_pdf import PdfPages
+from mpl_toolkits.basemap import Basemap
+#from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.colors import LogNorm
 from matplotlib.colors import Normalize
-from PIL import Image
+#from PIL import Image
 from osgeo import gdalconst
-from scipy.interpolate import interp1d
+#from scipy.interpolate import interp1d
 import numpy as np
 import matplotlib.pyplot as plt
 import gdal
@@ -29,6 +29,23 @@ if RLDir[-1]!='/':
     RLDir=RLDir+'/'
 
 #exec(open(RLDir+'parameters_maps.py').read())
+run_model = False
+output_format = "png"
+lat1 = -75.35
+lon1 = 126.7
+lat2 = -75
+lon2 = 120.5
+dotsize = 4.
+list_RL = []
+list_RL_extra = []
+list_RL_highlight = []
+nbiso = 0
+nbhor = 0
+is_drill = True
+lon_drill = 123.+21./60.
+lat_drill = -75.1
+lat_step = 0.25
+lon_step = 1.
 data = yaml.load(open(RLDir+'parameters_maps.yml').read())
 globals().update(data)
 
@@ -487,7 +504,7 @@ for i,MapLabel in enumerate(list_maps):
         x,y=map1(LON,LAT)
 
         res=map1.scatter(x,y, c=height, marker='o', lw=0., edgecolor='', s=dotsize)
-        cb.set_label='Height above bed (m)'
+        cblabel='Height above bed (m)'
         
 
     if MapLabel=='Height-Above-Bed-1.2Myr':
