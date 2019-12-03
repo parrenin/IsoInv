@@ -215,7 +215,13 @@ class RadarLine:
         #Reading the radar dataset
         nbcolumns = 6+self.nbiso+self.is_bedelev+self.is_trace+self.nbhor
         print('nbcolumns:', nbcolumns)
-        readarray = np.loadtxt(self.label+'radar-data.txt', usecols=range(nbcolumns))
+        filename = self.label+'radar-data.txt'
+        if os.path.isfile(filename):
+            readarray = np.loadtxt(self.label+'radar-data.txt', usecols=range(nbcolumns),
+                                   skiprows=1)
+        else:
+            readarray = np.loadtxt(self.label+'radar-data.dat', usecols=range(nbcolumns), 
+                                   skiprows=1)
         if readarray[0, 4] > readarray[-1, 4]:
             readarray = readarray[::-1, :]
         self.LON_raw = readarray[:, 0]
