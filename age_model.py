@@ -1670,9 +1670,13 @@ elif RL.opt_method == 'MH1D':
                 age_accepted = np.transpose(np.array([RL.age[:, j]]))
             RL.variables1Dtest = np.random.multivariate_normal(RL.variables1D, step)
             #This is dirty, it does not work when we invert the thickness but not the GF!
-            if (RL.invert_thk and RL.variables1Dtest[3] <= RL.thkreal[j] and\
+            if (RL.invert_thk and\
                 RL.variables1Dtest[3] > max(RL.iso[:, j])) or not RL.invert_thk:
+                if RL.variables1Dtest[3] > RL.thkreal[j]:
+                    RL.variables1Dtest[3] = RL.thkreal[j]
                 costtest = RL.cost_fct(RL.variables1Dtest, j)
+                if RL.variables1Dtest[3] < RL.thkreal[j] and RL.m[j] > 0:
+                    costtest = 1000000000
 #                print costtest
                 if m.log(random.uniform(0, 1)) <= cost-costtest:
                     cost = costtest
@@ -1730,6 +1734,8 @@ elif RL.opt_method == 'MH1D':
         RL.sigma_age[:, j] = np.std(age_accepted, axis=1)
         print('min age at 85%', RL.agebotmin[j])
         RL.variables1D = variables1D_accepted[np.argmin(cost_accepted), :]
+#        RL.variables1D, RL.hess1D, infodict, mesg, ier = leastsq(RL.residuals1D, RL.variables1D,
+#                                                                 args=(j), full_output=1)
         RL.residuals1D(RL.variables1D, j)
 
 
