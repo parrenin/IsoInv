@@ -16,6 +16,7 @@ from scipy.interpolate import interp1d  #Deprecated, use numpy.interp
 from scipy.optimize import leastsq
 from scipy.special import erf
 import yaml
+import pandas as pd
 
 ###Registration of start time
 START_TIME = time.time()
@@ -1503,6 +1504,25 @@ class RadarLine:
             f.write(header)
             np.savetxt(f, np.transpose(output), delimiter="\t")
 
+    def age_2D_save(self):
+        # save model results as arrays 
+        # 2D data
+        np.savetxt(self.label + 'distance.txt',self.dist)
+        np.savetxt(self.label + 'depth.txt',self.depth)
+        np.savetxt(self.label + 'age.txt',self.age/1000.)
+        np.savetxt(self.label + 'ages_density.txt',self.age_density)
+        np.savetxt(self.label + 'thinning.txt',self.tau)
+        np.savetxt(self.label + 'sigma_age.txt',self.sigma_age)
+        
+        # along line data
+        data_line = pd.DataFrame({'Distance': self.distance[:], 
+                                  'thick':self.thkreal[:],
+                                  'stagnant': self.thkreal[:] - self.thk[:]})
+        data_line.to_csv (self.label + 'line.csv', index = False)
+        
+        # on the isochrones
+        np.savetxt(self.label + 'isomod.txt',self.iso_modage)       
+        np.savetxt(self.label + 'iso_obs_interp.txt',self.iso)
 
     def EDC(self):
         f = interp1d(self.distance, self.age)
@@ -1763,4 +1783,5 @@ RL.hor_age_save()
 RL.iso_age_save()
 RL.twtt_save()
 RL.layer_depth_save()
+RL.age_2D_save()
 print('Program execution time: ', time.time() - START_TIME, 'seconds')
