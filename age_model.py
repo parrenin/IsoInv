@@ -1692,10 +1692,10 @@ elif RL.opt_method == 'MH1D':
             #This is dirty, it does not work when we invert the thickness but not the GF!
             if (RL.invert_thk and\
                 RL.variables1Dtest[3] > max(RL.iso[:, j])) or not RL.invert_thk:
-                if RL.variables1Dtest[3] > RL.thkreal[j]:
+                if RL.invert_thk and RL.variables1Dtest[3] > RL.thkreal[j]:
                     RL.variables1Dtest[3] = RL.thkreal[j]
                 costtest = RL.cost_fct(RL.variables1Dtest, j)
-                if RL.variables1Dtest[3] < RL.thkreal[j] and RL.m[j] > 0:
+                if RL.invert_thk and RL.variables1Dtest[3] < RL.thkreal[j] and RL.m[j] > 0:
                     costtest = 1000000000
 #                print costtest
                 if m.log(random.uniform(0, 1)) <= cost-costtest:
