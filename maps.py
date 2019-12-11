@@ -46,7 +46,7 @@ lon_drill = 123.+21./60.
 lat_drill = -75.1
 lat_step = 0.25
 lon_step = 1.
-data = yaml.load(open(RLDir+'parameters_maps.yml').read())
+data = yaml.load(open(RLDir+'parameters_maps.yml').read(), Loader=yaml.FullLoader)
 globals().update(data)
 
 #Reading isochrones' ages
@@ -57,8 +57,8 @@ iso_age=np.concatenate((np.array([0]),readarray[:,0]))
 if run_model:
     for i,RLlabel in enumerate(list_RL+list_RL_extra):
         directory=RLDir+RLlabel
-        sys.argv=['age_model.py', directory]
-        exec(open('age_model.py').read())
+        sys.argv=['age_model2.py', directory]
+        exec(open('age_model2.py').read())
         plt.close("all")
 
 #Reading data for each radar line
@@ -68,7 +68,7 @@ for i,RLlabel in enumerate(list_RL):
     botage_array1=np.loadtxt(directory+'/agebottom.txt')
     m_array1=np.loadtxt(directory+'/m.txt')
     G0_array1=np.loadtxt(directory+'/G0.txt')
-    pprime_array1=np.loadtxt(directory+'/pprime.txt')
+    pprime_array1=np.loadtxt(directory+'/p.txt')
     hor_array1=np.loadtxt(directory+'/agehorizons.txt')
     if i==0:
         accu_array=accu_array1
