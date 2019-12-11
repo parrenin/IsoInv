@@ -152,7 +152,7 @@ for i,MapLabel in enumerate(list_maps):
 
 
     ##Draw surface contours
-    raster2 = gdal.Open(RLDir+'bedmap2/bedmap2_surface.txt')
+    raster2 = gdal.Open(RLDir+'../bedmap2/bedmap2_surface.txt')
     band2 = raster2.GetRasterBand(1)
     array2 = band2.ReadAsArray()
     array2=np.where(array2==-9999,np.nan,array2)
@@ -176,7 +176,7 @@ for i,MapLabel in enumerate(list_maps):
 
     ##Draw bedrock contours
 
-    raster2 = gdal.Open(RLDir+'bedmap2/bedmap2_bed.txt')
+    raster2 = gdal.Open(RLDir+'../bedmap2/bedmap2_bed.txt')
     band2 = raster2.GetRasterBand(1)
     array2 = band2.ReadAsArray()
     array2=np.where(array2==-9999,np.nan,array2)
@@ -219,7 +219,7 @@ for i,MapLabel in enumerate(list_maps):
                              
         return rasterBandArray
  
-    rasterBandArray=readRasterBandAsArray(RLDir+'bedmap2/Bed_BlobA_Geoid4.tif',1)
+    rasterBandArray=readRasterBandAsArray(RLDir+'../bedmap2/Bed_BlobA_Geoid4.tif',1)
 
     latmax=-75.1164861
     latmin=-75.5905194
@@ -286,7 +286,7 @@ for i,MapLabel in enumerate(list_maps):
         x,y=map1(lon,lat)
         plt.text(x,y,'Concordia Subglacial Trench',horizontalalignment='center',verticalalignment='center',rotation=-32)
 
-        candidates=readRasterBandAsArray(RLDir+'bedmap2/candidates_Brice_clipped.tif',1)
+        candidates=readRasterBandAsArray(RLDir+'../bedmap2/candidates_Brice_clipped.tif',1)
         candidates1=np.where(candidates != np.nan,candidates*0+10,np.nan)
         latmax=-75.263709
         latmin=-73.750157
@@ -471,14 +471,14 @@ for i,MapLabel in enumerate(list_maps):
 #        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
 
         ax2 = plt.axes()
-        lon=122.4
-        lat=-75.32
-        x,y=map1(lon,lat)
-        plt.text(x,y,'LDCP',horizontalalignment='center',verticalalignment='center')
-        lon=124.02
-        lat=-74.985
-        x,y=map1(lon,lat)
-        plt.text(x,y,'NP',horizontalalignment='center',verticalalignment='center')
+#        lon=122.4
+#        lat=-75.32
+#        x,y=map1(lon,lat)
+#        plt.text(x,y,'LDCP',horizontalalignment='center',verticalalignment='center')
+#        lon=124.02
+#        lat=-74.985
+#        x,y=map1(lon,lat)
+#        plt.text(x,y,'NP',horizontalalignment='center',verticalalignment='center')
 
 
 #        output=np.transpose(np.vstack((LON,LAT,resolution/1e3)))
