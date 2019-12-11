@@ -495,6 +495,14 @@ class RadarLine:
 
         self.iso_modage[:, j] = np.interp(self.iso[:, j], self.depth[:, j], self.age[:, j])
 
+
+
+        return np.concatenate((np.array([self.a[j]]), np.array([self.m[j]]),\
+               np.array([self.p[j]]), self.age[:, j], np.log(self.age[1:, j]-\
+               self.age_surf), np.array([self.G0[j]])))
+
+    def model1D_finish(self, j):
+        
         self.agebot10kyrm[j] = np.interp(10000., self.age_density[:, j],
                          (self.age[:-1, j]+self.age[1:,j])/2)
         self.agebot15kyrm[j] = np.interp(15000., self.age_density[:, j], 
@@ -554,10 +562,6 @@ class RadarLine:
         #TODO: make a function to convert to twtt, and make an array for the different isochrones.
         self.twttBed[j] = (self.thk[j]-self.firn_correction)*100/84.248+250.
 
-
-        return np.concatenate((np.array([self.a[j]]), np.array([self.m[j]]),\
-               np.array([self.p[j]]), self.age[:, j], np.log(self.age[1:, j]-\
-               self.age_surf), np.array([self.G0[j]])))
 
     def model(self):  #TODO: kill this or make a call to model(j)
         for j in range(np.size(self.distance)):
@@ -729,7 +733,6 @@ class RadarLine:
         fig, plotmodel = plt.subplots()
         plotmodel.set_aspect(self.aspect)
         plt.plot(self.distance, self.thkreal, label='obs. bedrock', color='k', linewidth=2)
-        plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
         for i in range(self.nbiso):
             if i == 0:
                 plt.plot(self.distance, self.iso[i, :], color='w', linewidth=1,
@@ -750,6 +753,7 @@ class RadarLine:
         levels = np.arange(0, 1600, 100)
         levels_color = np.arange(0, 1500, 10)
         plt.contourf(self.dist, self.depth, self.agesteady/1000., levels_color, cmap='jet')
+        plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
         if self.is_EDC:
             EDC_x = np.array([self.distance_EDC, self.distance_EDC])
             EDC_y = np.array([0., 3200.])
@@ -779,7 +783,6 @@ class RadarLine:
         fig, plotmodel = plt.subplots()
         plotmodel.set_aspect(self.aspect)
         plt.plot(self.distance, self.thkreal, color='k', linewidth=2, label='bed')
-        plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
 #        plt.legend(loc=1)
         for i in range(self.nbiso):
             if i == 0:
@@ -801,6 +804,7 @@ class RadarLine:
         levels = np.arange(0, 1600, 100)
         levels_color = np.arange(0, 1500, 10)
         plt.contourf(self.dist, self.depth, self.age/1000., levels_color, cmap='jet')
+        plt.fill_between(self.distance, self.thkreal, self.thk, color='0.5', label='stagnant ice')
         if self.is_EDC:
             EDC_x = np.array([self.distance_EDC, self.distance_EDC])
             EDC_y = np.array([0., 3200.])
@@ -1475,6 +1479,7 @@ elif RL.opt_method == 'leastsq1D':
         RL.variables1D, RL.hess1D, infodict, mesg, ier = leastsq(RL.residuals1D, RL.variables1D,
                                                                  args=(j), full_output=1)
         RL.residuals1D(RL.variables1D, j)
+        RL.model1D_finish(j)
         print(RL.variables1D)
         if not RL.calc_sigma:
             RL.hess1D = np.zeros((np.size(RL.variables1D), np.size(RL.variables1D)))
