@@ -46,6 +46,9 @@ lon_drill = 123.+21./60.
 lat_drill = -75.1
 lat_step = 0.25
 lon_step = 1.
+scale = False
+labels = []
+
 data = yaml.load(open(RLDir+'parameters_maps.yml').read(), Loader=yaml.FullLoader)
 globals().update(data)
 
@@ -119,7 +122,7 @@ for  i,RLlabel in enumerate(list_RL_extra):
 
 
 #
-list_maps=['bottom-age','resolution-1.5Myr','accu-steady','pprime', 'geothermal-heat-flux','melting','radar-lines','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','min-bottom-age','age-100m','age-150m','age-200m','age-250m', 'resolution-1Myr','resolution-1.2Myr','geothermal-heat-flux-sigma','pprime-sigma','accu-sigma']
+list_maps=['resolution-1.5Myr','radar-lines','bottom-age','accu-steady','pprime', 'geothermal-heat-flux','melting','melting-sigma','Height-Above-Bed-0.8Myr','Height-Above-Bed-1Myr','Height-Above-Bed-1.2Myr','Height-Above-Bed-1.5Myr','min-bottom-age','age-100m','age-150m','age-200m','age-250m', 'resolution-1Myr','resolution-1.2Myr','geothermal-heat-flux-sigma','pprime-sigma','accu-sigma']
 list_length=len(list_maps)
 for i in range(nbiso):
     list_maps.append('accu-layer'+ "%02i"%(i+1) +'_'+str(int(iso_age[i]/1000.))+'-'+str(int(iso_age[i+1]/1000.))+'kyr' )
@@ -137,8 +140,8 @@ for i,MapLabel in enumerate(list_maps):
 
     map1.drawparallels(np.arange(-90.,81.,lat_step), labels=[True, False, False, True], dashes=[1, 5], color='0.5')
     map1.drawmeridians(np.arange(-180.,180.,lon_step), latmax=85., labels=[False, True, True, False], dashes=[1, 5], color='0.5')
-    map1.drawmapscale(lon1-1.2, lat1+0.2, lon1, lat1, 20, yoffset=10., barstyle='simple')
-
+    if len(scale) == 3:
+        map1.drawmapscale(scale[0], scale[1], scale[0], scale[1], scale[2], yoffset=10., barstyle='simple')
 
 
     ##Draw bed topography
@@ -266,58 +269,58 @@ for i,MapLabel in enumerate(list_maps):
         map1.scatter(x,y, c='r', marker='o', lw=0., edgecolor='', s=dotsize)
 
 
-        ax2 = plt.axes()
-        lon=124.4520
-        lat=-74.8901
-        x,y=map1(lon,lat)
-        plt.text(x,y,'A', color='red', fontweight='bold')
-
-        lon=121.7368
-        lat=-75.4481
-        x,y=map1(lon,lat)
-        plt.text(x,y,"A'", color='red', fontweight='bold')
-        
-        lon=124.7
-        lat=-75.1
-        x,y=map1(lon,lat)
-        plt.text(x,y,'Concordia Ridge',horizontalalignment='center',verticalalignment='center',rotation=-32)
-        lon=124.2
-        lat=-75.2
-        x,y=map1(lon,lat)
-        plt.text(x,y,'Concordia Subglacial Trench',horizontalalignment='center',verticalalignment='center',rotation=-32)
-
-        candidates=readRasterBandAsArray(RLDir+'../bedmap2/candidates_Brice_clipped.tif',1)
-        candidates1=np.where(candidates != np.nan,candidates*0+10,np.nan)
-        latmax=-75.263709
-        latmin=-73.750157
-        lonmax=132.986033
-        lonmin=115.231155
-        hmin,vmin=map1(lonmin,latmin)
-        hmax,vmax=map1(lonmax,latmax)
-        extent=(hmax, hmin, vmin, vmax)
-        plt.imshow(candidates1, origin='lower', cmap='Oranges_r', extent=extent, alpha=0.2, interpolation='none')
-
-        lon=122
-        lat=-75.1
-        x,y=map1(lon,lat)
-        plt.text(x,y,'A',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
-        lon=124.9
-        lat=-75.2
-        x,y=map1(lon,lat)
-        plt.text(x,y,'B',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
-        lon=124.95
-        lat=-75
-        x,y=map1(lon,lat)
-        plt.text(x,y,'C',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
-        lon=124.95
-        lat=-74.85
-        x,y=map1(lon,lat)
-        plt.text(x,y,'D',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
-
-        lon=121.
-        lat=-75.05
-        x,y=map1(lon,lat)
-        plt.text(x,y,'E',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
+#        ax2 = plt.axes()
+#        lon=124.4520
+#        lat=-74.8901
+#        x,y=map1(lon,lat)
+#        plt.text(x,y,'A', color='red', fontweight='bold')
+#
+#        lon=121.7368
+#        lat=-75.4481
+#        x,y=map1(lon,lat)
+#        plt.text(x,y,"A'", color='red', fontweight='bold')
+#        
+#        lon=124.7
+#        lat=-75.1
+#        x,y=map1(lon,lat)
+#        plt.text(x,y,'Concordia Ridge',horizontalalignment='center',verticalalignment='center',rotation=-32)
+#        lon=124.2
+#        lat=-75.2
+#        x,y=map1(lon,lat)
+#        plt.text(x,y,'Concordia Subglacial Trench',horizontalalignment='center',verticalalignment='center',rotation=-32)
+#
+#        candidates=readRasterBandAsArray(RLDir+'../bedmap2/candidates_Brice_clipped.tif',1)
+#        candidates1=np.where(candidates != np.nan,candidates*0+10,np.nan)
+#        latmax=-75.263709
+#        latmin=-73.750157
+#        lonmax=132.986033
+#        lonmin=115.231155
+#        hmin,vmin=map1(lonmin,latmin)
+#        hmax,vmax=map1(lonmax,latmax)
+#        extent=(hmax, hmin, vmin, vmax)
+#        plt.imshow(candidates1, origin='lower', cmap='Oranges_r', extent=extent, alpha=0.2, interpolation='none')
+#
+#        lon=122
+#        lat=-75.1
+#        x,y=map1(lon,lat)
+#        plt.text(x,y,'A',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
+#        lon=124.9
+#        lat=-75.2
+#        x,y=map1(lon,lat)
+#        plt.text(x,y,'B',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
+#        lon=124.95
+#        lat=-75
+#        x,y=map1(lon,lat)
+#        plt.text(x,y,'C',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
+#        lon=124.95
+#        lat=-74.85
+#        x,y=map1(lon,lat)
+#        plt.text(x,y,'D',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
+#
+#        lon=121.
+#        lat=-75.05
+#        x,y=map1(lon,lat)
+#        plt.text(x,y,'E',horizontalalignment='center',verticalalignment='center',color='orange',bbox=dict(facecolor='white', edgecolor='#767876'))
 
 
     if MapLabel=='bottom-age':
@@ -465,7 +468,8 @@ for i,MapLabel in enumerate(list_maps):
         resolution=botage_array[:,12]
         x,y=map1(LON,LAT)
 
-        norm = Normalize(vmax=20.)
+#        norm = Normalize(vmax=20.)
+        norm = Normalize()
         map1.scatter(x,y, c=resolution/1e3, marker='o', lw=0., edgecolor='', norm = norm, s=dotsize)
         cblabel='Resolution at 1.5Myr (kyr m$^{-1}$)'
 #        levels=np.array([1., 2., 4., 6., 8., 10., 20., 40.])
@@ -686,6 +690,14 @@ for i,MapLabel in enumerate(list_maps):
     if is_drill:
         xdrill,ydrill=map1(lon_drill,lat_drill)
         map1.scatter(xdrill,ydrill, marker='*', c='r', edgecolor='r', s=64)
+
+    ax2 = plt.axes()
+    for i in range(len(labels)):
+        x,y=map1(labels[i][0],labels[i][1])
+        plt.text(x,y+10,labels[i][2],horizontalalignment='center',verticalalignment='bottom',
+                 color='grey')
+        map1.scatter(x,y, marker='o', s=dotsize, color='k')
+
 
     plt.tight_layout()
 

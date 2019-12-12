@@ -417,6 +417,7 @@ class RadarLine:
         self.is_fusion = np.empty_like(self.distance)
 
         self.agebot = np.empty_like(self.distance)
+        self.realagebot = np.empty_like(self.distance)
         self.agebot10kyrm = np.empty_like(self.distance)
         self.agebot15kyrm = np.empty_like(self.distance)
         self.age100m = np.empty_like(self.distance)
@@ -503,32 +504,42 @@ class RadarLine:
 
     def model1D_finish(self, j):
         
-        self.agebot10kyrm[j] = np.interp(10000., self.age_density[:, j],
-                         (self.age[:-1, j]+self.age[1:,j])/2)
-        self.agebot15kyrm[j] = np.interp(15000., self.age_density[:, j], 
-                         (self.age[:-1, j]+self.age[1:,j])/2)
-
         f = interp1d(self.depth[:, j], self.age[:, j])
         self.agebot[j] = f(max(self.depth[:, j])-60)
+        self.realagebot[j] = f(min(self.thk[j], self.thkreal[j]))
         self.age100m[j] = f(max(self.depth[:, j])-100)
         self.age150m[j] = f(max(self.depth[:, j])-150)
         self.age200m[j] = f(max(self.depth[:, j])-200)
         self.age250m[j] = f(max(self.depth[:, j])-250)
         self.hor_modage[:, j] = f(self.hor[:, j])
-        h1 = interp1d(self.age[:-1, j], self.age_density[:, j])
+
+        self.agebot10kyrm[j] = np.interp(10000., self.age_density[:, j],
+                         (self.age[:-1, j]+self.age[1:,j])/2)
+        self.agebot15kyrm[j] = np.interp(15000., self.age_density[:, j], 
+                         (self.age[:-1, j]+self.age[1:,j])/2)
+        if self.agebot10kyrm[j] > self.realagebot[j]:
+            self.agebot10kyrm[j] = np.nan
+        if self.agebot15kyrm[j] > self.realagebot[j]:
+            self.agebot15kyrm[j] = np.nan
+
+
         h2 = interp1d(self.age[:, j], self.depth[:, j])
-        if self.agebot[j] >= 1000000:
-            self.age_density1Myr[j] = h1(1000000)
+        if self.realagebot[j] >= 1000000.:
+            self.age_density1Myr[j] = np.interp(1000000., (self.age[:-1,j]+self.age[1:,j])/2,
+                                self.age_density[:,j])
         else:
             self.age_density1Myr[j] = np.nan
-        if self.agebot[j] >= 1200000:
-            self.age_density1dot2Myr[j] = h1(1200000)
+        if self.realagebot[j] >= 1200000.:
+            self.age_density1dot2Myr[j] = np.interp(1200000., (self.age[:-1,j]+self.age[1:,j])/2,
+                                self.age_density[:,j])
         else:
             self.age_density1dot2Myr[j] = np.nan
-        if self.agebot[j] >= 1500000:
-            self.age_density1dot5Myr[j] = h1(1500000)
+        if self.realagebot[j] >= 1500000.:
+            self.age_density1dot5Myr[j] = np.interp(1500000., (self.age[:-1,j]+self.age[1:,j])/2,
+                                self.age_density[:,j])
         else:
             self.age_density1dot5Myr[j] = np.nan
+            
         if max(self.age[:, j]) >= 600000:
             self.height0dot6Myr[j] = self.thk[j]-h2(600000)
             self.twtt0dot6Myr[j] = (h2(600000)-self.firn_correction)*100/84.248+250.
@@ -1486,6 +1497,7 @@ elif RL.opt_method == 'leastsq1D':
         if np.size(RL.hess1D) != 1:
             RL.sigma1D(j)
     RL.agebotmin = RL.agebot-RL.sigmabotage
+    RL.agebotmax = RL.agebot+RL.sigmabotage
 
 
 else:
