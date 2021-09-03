@@ -194,8 +194,6 @@ for i,MapLabel in enumerate(list_maps):
     xx, yy = np.meshgrid(x, y)
 
 
-
-
     levels=np.arange(-1000., 900., 100.)
 
     if MapLabel=='radar-lines':

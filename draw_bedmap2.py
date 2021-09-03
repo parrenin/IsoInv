@@ -17,7 +17,7 @@ lon2=120.5
 lonEDC=123.+21./60.
 latEDC=-75.1
 
-output_format="png"
+output_format="svg"
 
 RLDir=sys.argv[1]
 if RLDir[-1]!='/':
@@ -56,7 +56,7 @@ m.drawmeridians(np.arange(-180.,181.,10.), latmax=85., dashes=[1, 2], color='0.5
 
 
 #Draw surface contours
-raster2 = gdal.Open(RLDir+'bedmap2/bedmap2_surface.txt')
+raster2 = gdal.Open(RLDir+'/bedmap2_surface.txt')
 band2 = raster2.GetRasterBand(1)
 array2 = band2.ReadAsArray()
 array2=np.where(array2==-9999,np.nan,array2)
@@ -69,7 +69,7 @@ xx, yy = np.meshgrid(x, y)
 m.contour(xx,yy, array2[::-1,:], colors='0.5', linewidths=0.5)
 
 #Draw continent's contour
-raster3 = gdal.Open(RLDir+'bedmap2/bedmap2_icemask_grounded_and_shelves.txt')
+raster3 = gdal.Open(RLDir+'/bedmap2_icemask_grounded_and_shelves.txt')
 band3 = raster3.GetRasterBand(1)
 array3 = band3.ReadAsArray()
 #array3=np.where(array3==-9999,np.nan,array3)
@@ -93,7 +93,7 @@ xx, yy = np.meshgrid(x, y)
 m.contour(xx,yy, array3[::-1,:], colors='0.5', linewidths=0.5)
 
 xEDC,yEDC=m(lonEDC,latEDC)
-m.scatter(xEDC,yEDC, marker='*', c='r', edgecolor='r', s=64)
+#m.plot(xEDC,yEDC, marker='*', c='r')
 x1,y1=m(lon1,lat1)
 x2,y2=m(lon2,lat2)
 xsquare=np.array([x1,x1,x2,x2,x1])

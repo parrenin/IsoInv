@@ -857,9 +857,9 @@ class RadarLine:
             colorscatter = self.iso_modage[i, :]-self.iso_age[i]
             if i == 0:
                 sc = plt.scatter(self.distance, self.iso[i, :], c=colorscatter,
-                                 label='obs. isochrones', s=7, edgecolor='', norm=norm)
+                                 label='obs. isochrones', s=7, edgecolor=None, norm=norm)
             else:
-                plt.scatter(self.distance, self.iso[i, :], c=colorscatter, s=7, edgecolor='',
+                plt.scatter(self.distance, self.iso[i, :], c=colorscatter, s=7, edgecolor=None,
                             norm=norm)
 #        levels = np.arange(0, 1600000, 100000)
 #        levels_color = np.arange(0, 1500000, 10000)
@@ -1160,9 +1160,9 @@ class RadarLine:
         plt.plot(self.distance, np.log(self.agebotmax/1000000), color='k', linestyle='--')
         plt.ylabel('age (Myr)', fontsize=10)
         plt.tick_params(axis='y', which='both', labelsize=8)
-        plotpara.set_yticks(np.log(np.concatenate((np.arange(1., 10.)/10., np.arange(1., 10.)))))
+        plotpara.set_yticks(np.log(np.concatenate((np.arange(1., 10.)/10., np.arange(1., 11.)))))
         labels = ["", "", "", "", "0.5", "", "0.7", "", "", "1", "2", "3", "4", "", "6", "", "",
-                  "", "1"]
+                  "", "10"]
         plotpara.set_yticklabels(labels)
         x1, x2, y1, y2 = plt.axis()
         plt.axis((min(self.distance), max(self.distance), m.log(self.age_min), m.log(self.age_max)))
@@ -1291,15 +1291,15 @@ class RadarLine:
                             self.age250m, self.age_density1Myr, self.age_density1dot2Myr,
                             self.age_density1dot5Myr, self.height0dot6Myr, self.height0dot8Myr,
                             self.height1Myr, self.height1dot2Myr, self.height1dot5Myr,
-                            self.agebot10kyrm, self.agebot15kyrm))
+                            self.agebot10kyrm, self.agebot15kyrm, self.thkreal))
 
         with open(self.label+'agebottom.txt', 'w') as f:
-            f.write('#LON\tLAT\tdistance(km)\tthickness(m)\tage60m(yr-b1950)'
+            f.write('#LON\tLAT\tdistance(km)\tinverted_thickness(m)\tage60m(yr-b1950)'
                     '\tage-min(yr-b1950)'
                     '\tage100m\tage150m\tage200m\tage250\tage_density1Myr\tage_density1.2Myr\t'
                     'age_density1.5Myr\theight0.6Myr\theight0.8Myr\theight1Myr\theight1.2Myr\t'
                     'height1.5Myr'
-                    '\tage-10kyrm\tage-15kyrm'
+                    '\tage-10kyrm\tage-15kyrm\treal_thickness'
                     '\n')
 
             np.savetxt(f, np.transpose(output), delimiter="\t")
