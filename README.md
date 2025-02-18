@@ -1,6 +1,6 @@
 # IsoInv
 
-A python model to invert isocrone observations in deep polar ice sheets
+A python model to invert isochrone observations in deep polar ice sheets
 
 # Files description
 
